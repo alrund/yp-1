@@ -23,10 +23,7 @@ func NewToken(g Generator) *Token {
 }
 
 func (t *Token) IsExpired() bool {
-	if t.Expire.Before(time.Now()) {
-		return true
-	}
-	return false
+	return t.Expire.Before(time.Now())
 }
 
 func (t *Token) Refresh() *Token {

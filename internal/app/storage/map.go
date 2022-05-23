@@ -5,7 +5,7 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
-var ErrUrlNotFound = errors.New("url not found")
+var ErrURLNotFound = errors.New("url not found")
 var ErrTokenNotFound = errors.New("token not found")
 
 type MapStorage struct {
@@ -37,7 +37,7 @@ func (s *MapStorage) GetToken(tokenValue string) (tkn.Token, error) {
 	return token, ErrTokenNotFound
 }
 
-func (s *MapStorage) GetTokenByUrl(url string) (tkn.Token, error) {
+func (s *MapStorage) GetTokenByURL(url string) (tkn.Token, error) {
 	if tokenValue, ok := s.url2tokenValue[url]; ok {
 		return s.GetToken(tokenValue)
 	}
@@ -45,14 +45,14 @@ func (s *MapStorage) GetTokenByUrl(url string) (tkn.Token, error) {
 	return token, ErrTokenNotFound
 }
 
-func (s *MapStorage) GetUrl(tokenValue string) (string, error) {
+func (s *MapStorage) GetURL(tokenValue string) (string, error) {
 	if value, ok := s.tokenValue2url[tokenValue]; ok {
 		return value, nil
 	}
-	return "", ErrUrlNotFound
+	return "", ErrURLNotFound
 }
 
-func (s *MapStorage) HasUrl(url string) (bool, error) {
+func (s *MapStorage) HasURL(url string) (bool, error) {
 	if _, ok := s.url2tokenValue[url]; !ok {
 		return false, nil
 	}
