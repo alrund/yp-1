@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-var us = &UrlShortener{stg.NewMapStorage()}
+var us = &URLShortener{stg.NewMapStorage()}
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {

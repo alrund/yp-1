@@ -11,22 +11,22 @@ var ErrTokenExpiredError = errors.New("the token time is up")
 type Storage interface {
 	Set(url string, token tkn.Token) error
 	GetToken(tokenValue string) (tkn.Token, error)
-	GetTokenByUrl(url string) (tkn.Token, error)
-	GetUrl(tokenValue string) (string, error)
-	HasUrl(url string) (bool, error)
+	GetTokenByURL(url string) (tkn.Token, error)
+	GetURL(tokenValue string) (string, error)
+	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
 }
 
-type UrlShortener struct {
+type URLShortener struct {
 	Storage
 }
 
-func (us *UrlShortener) Add(url string) (*tkn.Token, error) {
-	ok, err := us.HasUrl(url)
+func (us *URLShortener) Add(url string) (*tkn.Token, error) {
+	ok, err := us.HasURL(url)
 	if err != nil {
 		return nil, err
 	} else if ok {
-		token, err := us.GetTokenByUrl(url)
+		token, err := us.GetTokenByURL(url)
 		if err != nil {
 			return nil, err
 		}
@@ -46,7 +46,7 @@ func (us *UrlShortener) Add(url string) (*tkn.Token, error) {
 	return token, nil
 }
 
-func (us *UrlShortener) Get(tokenValue string) (string, error) {
+func (us *URLShortener) Get(tokenValue string) (string, error) {
 	ok, err := us.HasToken(tokenValue)
 	if err != nil {
 		return "", err
@@ -58,7 +58,7 @@ func (us *UrlShortener) Get(tokenValue string) (string, error) {
 		if token.IsExpired() {
 			return "", ErrTokenExpiredError
 		}
-		return us.GetUrl(tokenValue)
+		return us.GetURL(tokenValue)
 	}
 	return "", stg.ErrTokenNotFound
 }
