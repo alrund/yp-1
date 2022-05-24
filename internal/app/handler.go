@@ -5,7 +5,6 @@ import (
 	stg "github.com/alrund/yp-1/internal/app/storage"
 	"io"
 	"net/http"
-	"strings"
 )
 
 var us = &URLShortener{stg.NewMapStorage()}
@@ -40,7 +39,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case http.MethodGet:
-		id := strings.TrimPrefix(r.URL.Path, "/")
+		id := r.URL.Path[1:]
 		if id == "" {
 			http.Error(w, "400 Bad Request.", http.StatusBadRequest)
 			return
