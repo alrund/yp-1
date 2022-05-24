@@ -30,7 +30,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		_, err = w.Write([]byte(token.Value))
+		_, err = w.Write([]byte(Schema + "://" + Host + "/" + token.Value))
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return

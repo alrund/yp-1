@@ -13,5 +13,5 @@ import (
 // Эндпоинт GET /{id} принимает в качестве URL-параметра идентификатор сокращённого URL и возвращает ответ с кодом 307 и оригинальным URL в HTTP-заголовке Location.
 // Нужно учесть некорректные запросы и возвращать для них ответ с кодом 400.
 func main() {
-	log.Fatal(http.ListenAndServe(":8080", http.HandlerFunc(app.Handler)))
+	log.Fatal(http.ListenAndServe(app.Host, http.HandlerFunc(app.Handler)))
 }
