@@ -6,6 +6,9 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
+const Schema = "http"
+const Host = "localhost:8080"
+
 var ErrTokenExpiredError = errors.New("the token time is up")
 
 type Storage interface {
