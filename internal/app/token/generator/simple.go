@@ -1,4 +1,4 @@
-package token
+package generator
 
 import (
 	"math/rand"
@@ -9,6 +9,10 @@ const Length = 6
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 type SimpleGenerator struct{}
+
+func NewSimpleGenerator() *SimpleGenerator {
+	return &SimpleGenerator{}
+}
 
 func (st *SimpleGenerator) Generate() string {
 	rs := st.randomString(Length)
