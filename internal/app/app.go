@@ -1,15 +1,9 @@
 package app
 
 import (
-	"errors"
 	stg "github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
-
-const Schema = "http"
-const Host = "localhost:8080"
-
-var ErrTokenExpiredError = errors.New("the token time is up")
 
 type Storage interface {
 	Set(url string, token tkn.Token) error
@@ -21,7 +15,18 @@ type Storage interface {
 }
 
 type URLShortener struct {
+	Schema string
+	Host   string
 	Storage
+	TokenGenerator tkn.Generator
+}
+
+func (us *URLShortener) GetServerHost() string {
+	return us.Host
+}
+
+func (us *URLShortener) GetServerURL() string {
+	return us.Schema + "://" + us.Host + "/"
 }
 
 func (us *URLShortener) Add(url string) (*tkn.Token, error) {
@@ -41,7 +46,7 @@ func (us *URLShortener) Add(url string) (*tkn.Token, error) {
 		}
 		return &token, nil
 	}
-	token := tkn.NewToken(new(tkn.SimpleGenerator))
+	token := tkn.NewToken(us.TokenGenerator)
 	err = us.Set(url, *token)
 	if err != nil {
 		return nil, err
@@ -59,7 +64,7 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 			return "", err
 		}
 		if token.IsExpired() {
-			return "", ErrTokenExpiredError
+			return "", tkn.ErrTokenExpiredError
 		}
 		return us.GetURL(tokenValue)
 	}

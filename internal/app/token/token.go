@@ -1,8 +1,11 @@
 package token
 
 import (
+	"errors"
 	"time"
 )
+
+var ErrTokenExpiredError = errors.New("the token time is up")
 
 const LifeTime = 24 * time.Hour
 
