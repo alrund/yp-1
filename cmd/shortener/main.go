@@ -5,6 +5,7 @@ import (
 	"github.com/alrund/yp-1/internal/app/handler"
 	stg "github.com/alrund/yp-1/internal/app/storage"
 	gen "github.com/alrund/yp-1/internal/app/token/generator"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -17,7 +18,12 @@ import (
 // Нужно учесть некорректные запросы и возвращать для них ответ с кодом 400.
 //
 // Инкремент 2
-//Покройте сервис юнит-тестами. Сконцентрируйтесь на покрытии тестами эндпоинтов, чтобы защитить API сервиса от случайных изменений.
+// Покройте сервис юнит-тестами. Сконцентрируйтесь на покрытии тестами эндпоинтов, чтобы защитить API сервиса от случайных изменений.
+//
+// Инкремент 3
+// Вы написали приложение с помощью стандартной библиотеки net/http. Используя любой пакет (роутер или фреймворк), совместимый с net/http, перепишите ваш код.
+// Задача направлена на рефакторинг приложения с помощью готовой библиотеки.
+// Обратите внимание, что необязательно запускать приложение вручную: тесты, которые вы написали до этого, помогут вам в рефакторинге.
 func main() {
 	us := &app.URLShortener{
 		Schema:         "http",
@@ -25,17 +31,15 @@ func main() {
 		Storage:        stg.NewMapStorage(),
 		TokenGenerator: gen.NewSimpleGenerator(),
 	}
-	err := http.ListenAndServe(us.GetServerHost(), http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			switch r.Method {
-			case http.MethodPost:
-				handler.AddHandler(us, w, r)
-			case http.MethodGet:
-				handler.GetHandler(us, w, r)
-			default:
-				http.Error(w, "Only GET & POST requests are allowed!", http.StatusMethodNotAllowed)
-			}
-		},
-	))
-	log.Fatal(err)
+
+	r := mux.NewRouter()
+
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		handler.AddHandler(us, w, r)
+	}).Methods(http.MethodPost)
+	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
+		handler.GetHandler(us, w, r)
+	}).Methods(http.MethodGet)
+
+	log.Fatal(http.ListenAndServe(us.GetServerHost(), r))
 }
