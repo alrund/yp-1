@@ -358,9 +358,9 @@ func TestNewMapStorage(t *testing.T) {
 		{
 			name: "success",
 			want: &MapStorage{
-				make(map[string]*tkn.Token),
-				make(map[string]string),
-				make(map[string]string),
+				tokens:         make(map[string]*tkn.Token),
+				url2tokenValue: make(map[string]string),
+				tokenValue2url: make(map[string]string),
 			},
 		},
 	}
