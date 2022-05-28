@@ -33,7 +33,8 @@ func (us *URLShortener) Add(url string) (*tkn.Token, error) {
 	ok, err := us.HasURL(url)
 	if err != nil {
 		return nil, err
-	} else if ok {
+	}
+	if ok {
 		token, err := us.GetTokenByURL(url)
 		if err != nil {
 			return nil, err

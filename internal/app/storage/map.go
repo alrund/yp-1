@@ -2,11 +2,14 @@ package storage
 
 import (
 	"errors"
+
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
-var ErrURLNotFound = errors.New("url not found")
-var ErrTokenNotFound = errors.New("token not found")
+var (
+	ErrURLNotFound   = errors.New("url not found")
+	ErrTokenNotFound = errors.New("token not found")
+)
 
 type MapStorage struct {
 	tokens         map[string]*tkn.Token

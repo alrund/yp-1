@@ -1,9 +1,10 @@
 package handler
 
 import (
-	tkn "github.com/alrund/yp-1/internal/app/token"
 	"io"
 	"net/http"
+
+	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
 type Adder interface {

@@ -5,8 +5,10 @@ import (
 	"strings"
 )
 
-const Length = 6
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	Length  = 6
+	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+)
 
 type SimpleGenerator struct{}
 
