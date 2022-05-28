@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"github.com/alrund/yp-1/internal/app"
-	stg "github.com/alrund/yp-1/internal/app/storage"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/alrund/yp-1/internal/app"
+	stg "github.com/alrund/yp-1/internal/app/storage"
+	"github.com/stretchr/testify/assert"
 )
 
 type TestGenerator struct{}

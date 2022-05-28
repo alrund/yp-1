@@ -1,15 +1,16 @@
 package handler
 
 import (
-	"github.com/alrund/yp-1/internal/app"
-	tkn "github.com/alrund/yp-1/internal/app/token"
-	gen "github.com/alrund/yp-1/internal/app/token/generator"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/alrund/yp-1/internal/app"
+	tkn "github.com/alrund/yp-1/internal/app/token"
+	gen "github.com/alrund/yp-1/internal/app/token/generator"
+	"github.com/stretchr/testify/assert"
 )
 
 type Storage struct{}
@@ -23,6 +24,7 @@ func (st *Storage) HasToken(tokenValue string) (bool, error) {
 	}
 	return false, nil
 }
+
 func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	if tokenValue == "expired" {
 		return &tkn.Token{Value: "expired", Expire: time.Now().Add(-tkn.LifeTime)}, nil

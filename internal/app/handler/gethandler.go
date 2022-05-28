@@ -2,9 +2,10 @@ package handler
 
 import (
 	"errors"
+	"net/http"
+
 	stg "github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
-	"net/http"
 )
 
 type Getter interface {
