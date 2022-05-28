@@ -23,16 +23,16 @@ func (st *Storage) HasToken(tokenValue string) (bool, error) {
 	}
 	return false, nil
 }
-func (st *Storage) GetToken(tokenValue string) (tkn.Token, error) {
+func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	if tokenValue == "expired" {
-		return tkn.Token{Value: "expired", Expire: time.Now().Add(-tkn.LifeTime)}, nil
+		return &tkn.Token{Value: "expired", Expire: time.Now().Add(-tkn.LifeTime)}, nil
 	}
-	return tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
+	return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
 }
-func (st *Storage) GetURL(tokenValue string) (string, error)    { return "https://ya.ru", nil }
-func (st *Storage) GetTokenByURL(url string) (tkn.Token, error) { return tkn.Token{}, nil }
-func (st *Storage) HasURL(url string) (bool, error)             { return true, nil }
-func (st *Storage) Set(url string, token tkn.Token) error       { return nil }
+func (st *Storage) GetURL(tokenValue string) (string, error)     { return "https://ya.ru", nil }
+func (st *Storage) GetTokenByURL(url string) (*tkn.Token, error) { return nil, nil }
+func (st *Storage) HasURL(url string) (bool, error)              { return true, nil }
+func (st *Storage) Set(url string, token *tkn.Token) error       { return nil }
 
 var us2 = &app.URLShortener{
 	Schema:         "http",
