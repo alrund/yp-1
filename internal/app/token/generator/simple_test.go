@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenerate(t *testing.T) {
-	sg := &SimpleGenerator{}
+	sg := &Simple{}
 	val := sg.Generate()
 	assert.Len(t, val, Length)
 	for _, r := range val {

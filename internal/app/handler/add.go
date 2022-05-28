@@ -12,7 +12,7 @@ type Adder interface {
 	Add(url string) (*tkn.Token, error)
 }
 
-func AddHandler(us Adder, w http.ResponseWriter, r *http.Request) {
+func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return

@@ -1,7 +1,7 @@
 package app
 
 import (
-	stg "github.com/alrund/yp-1/internal/app/storage"
+	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
@@ -69,5 +69,5 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 		}
 		return us.GetURL(tokenValue)
 	}
-	return "", stg.ErrTokenNotFound
+	return "", storage.ErrTokenNotFound
 }

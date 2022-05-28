@@ -6,8 +6,8 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/handler"
-	stg "github.com/alrund/yp-1/internal/app/storage"
-	gen "github.com/alrund/yp-1/internal/app/token/generator"
+	"github.com/alrund/yp-1/internal/app/storage"
+	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/gorilla/mux"
 )
 
@@ -34,17 +34,17 @@ func main() {
 	us := &app.URLShortener{
 		Schema:         "http",
 		Host:           "localhost:8080",
-		Storage:        stg.NewMapStorage(),
-		TokenGenerator: gen.NewSimpleGenerator(),
+		Storage:        storage.NewMap(),
+		TokenGenerator: generator.NewSimple(),
 	}
 
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.AddHandler(us, w, r)
+		handler.Add(us, w, r)
 	}).Methods(http.MethodPost)
 	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetHandler(us, w, r)
+		handler.Get(us, w, r)
 	}).Methods(http.MethodGet)
 
 	log.Fatal(http.ListenAndServe(us.GetServerHost(), r))
