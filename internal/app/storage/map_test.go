@@ -22,14 +22,16 @@ func TestGetToken(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "xxx",
@@ -40,14 +42,16 @@ func TestGetToken(t *testing.T) {
 		{
 			"fail",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "zzz",
@@ -83,14 +87,16 @@ func TestGetTokenByURL(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				url: "url",
@@ -101,14 +107,16 @@ func TestGetTokenByURL(t *testing.T) {
 		{
 			"fail",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				url: "zzz",
@@ -144,14 +152,16 @@ func TestGetURL(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "xxx",
@@ -162,14 +172,16 @@ func TestGetURL(t *testing.T) {
 		{
 			"fail",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "zzz",
@@ -205,14 +217,16 @@ func TestHasToken(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "xxx",
@@ -223,14 +237,16 @@ func TestHasToken(t *testing.T) {
 		{
 			"success not found",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				tokenValue: "zzz",
@@ -264,14 +280,16 @@ func TestHasURL(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				url: "url",
@@ -282,14 +300,16 @@ func TestHasURL(t *testing.T) {
 		{
 			"success not found",
 			&MapStorage{
-				tokens: map[string]*tkn.Token{
+				url2tokenValue: map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
 					"xxx": {
-						Value:  "yyy",
-						Expire: time.Now().Add(tkn.LifeTime),
+						token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						url: "url",
 					},
 				},
-				url2tokenValue: map[string]string{"url": "xxx"},
-				tokenValue2url: map[string]string{"xxx": "url"},
 			},
 			args{
 				url: "zzz",
@@ -324,9 +344,8 @@ func TestSet(t *testing.T) {
 		{
 			"success",
 			&MapStorage{
-				tokens:         map[string]*tkn.Token{},
-				url2tokenValue: map[string]string{},
-				tokenValue2url: map[string]string{},
+				url2tokenValue:       map[string]string{},
+				tokenValue2composite: map[string]*composite{},
 			},
 			args{
 				url: "url",
@@ -358,9 +377,8 @@ func TestNewMapStorage(t *testing.T) {
 		{
 			name: "success",
 			want: &MapStorage{
-				tokens:         make(map[string]*tkn.Token),
-				url2tokenValue: make(map[string]string),
-				tokenValue2url: make(map[string]string),
+				url2tokenValue:       make(map[string]string),
+				tokenValue2composite: make(map[string]*composite),
 			},
 		},
 	}
