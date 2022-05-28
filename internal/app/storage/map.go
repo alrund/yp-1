@@ -12,26 +12,28 @@ var (
 	ErrTokenNotFound = errors.New("token not found")
 )
 
+type composite struct {
+	token *tkn.Token
+	url   string
+}
+
 type MapStorage struct {
-	tokens         map[string]*tkn.Token
-	url2tokenValue map[string]string
-	tokenValue2url map[string]string
-	mx             sync.RWMutex
+	url2tokenValue       map[string]string
+	tokenValue2composite map[string]*composite
+	mx                   sync.RWMutex
 }
 
 func NewMapStorage() *MapStorage {
 	return &MapStorage{
-		tokens:         make(map[string]*tkn.Token),
-		url2tokenValue: make(map[string]string),
-		tokenValue2url: make(map[string]string),
+		url2tokenValue:       make(map[string]string),
+		tokenValue2composite: make(map[string]*composite),
 	}
 }
 
 func (s *MapStorage) Set(url string, token *tkn.Token) error {
 	s.mx.Lock()
-	s.tokens[token.Value] = token
 	s.url2tokenValue[url] = token.Value
-	s.tokenValue2url[token.Value] = url
+	s.tokenValue2composite[token.Value] = &composite{token, url}
 	s.mx.Unlock()
 	return nil
 }
@@ -39,8 +41,8 @@ func (s *MapStorage) Set(url string, token *tkn.Token) error {
 func (s *MapStorage) GetToken(tokenValue string) (*tkn.Token, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	if value, ok := s.tokens[tokenValue]; ok {
-		return value, nil
+	if value, ok := s.tokenValue2composite[tokenValue]; ok {
+		return value.token, nil
 	}
 	return nil, ErrTokenNotFound
 }
@@ -57,8 +59,8 @@ func (s *MapStorage) GetTokenByURL(url string) (*tkn.Token, error) {
 func (s *MapStorage) GetURL(tokenValue string) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	if value, ok := s.tokenValue2url[tokenValue]; ok {
-		return value, nil
+	if value, ok := s.tokenValue2composite[tokenValue]; ok {
+		return value.url, nil
 	}
 	return "", ErrURLNotFound
 }
@@ -75,7 +77,7 @@ func (s *MapStorage) HasURL(url string) (bool, error) {
 func (s *MapStorage) HasToken(tokenValue string) (bool, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	if _, ok := s.tokenValue2url[tokenValue]; !ok {
+	if _, ok := s.tokenValue2composite[tokenValue]; !ok {
 		return false, nil
 	}
 	return true, nil
