@@ -14,14 +14,14 @@ func TestGetToken(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    string
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -41,7 +41,7 @@ func TestGetToken(t *testing.T) {
 		},
 		{
 			"fail",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -79,14 +79,14 @@ func TestGetTokenByURL(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    string
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -106,7 +106,7 @@ func TestGetTokenByURL(t *testing.T) {
 		},
 		{
 			"fail",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -144,14 +144,14 @@ func TestGetURL(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    string
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -171,7 +171,7 @@ func TestGetURL(t *testing.T) {
 		},
 		{
 			"fail",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -209,14 +209,14 @@ func TestHasToken(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    bool
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -236,7 +236,7 @@ func TestHasToken(t *testing.T) {
 		},
 		{
 			"success not found",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -272,14 +272,14 @@ func TestHasURL(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    bool
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -299,7 +299,7 @@ func TestHasURL(t *testing.T) {
 		},
 		{
 			"success not found",
-			&MapStorage{
+			&Map{
 				url2tokenValue: map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -336,14 +336,14 @@ func TestSet(t *testing.T) {
 	}
 	tests := []struct {
 		name    string
-		storage *MapStorage
+		storage *Map
 		args    args
 		want    string
 		wantErr bool
 	}{
 		{
 			"success",
-			&MapStorage{
+			&Map{
 				url2tokenValue:       map[string]string{},
 				tokenValue2composite: map[string]*composite{},
 			},
@@ -372,11 +372,11 @@ func TestSet(t *testing.T) {
 func TestNewMapStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want *MapStorage
+		want *Map
 	}{
 		{
 			name: "success",
-			want: &MapStorage{
+			want: &Map{
 				url2tokenValue:       make(map[string]string),
 				tokenValue2composite: make(map[string]*composite),
 			},
@@ -384,7 +384,7 @@ func TestNewMapStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, NewMapStorage())
+			assert.Equal(t, tt.want, NewMap())
 		})
 	}
 }

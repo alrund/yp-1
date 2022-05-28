@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/alrund/yp-1/internal/app"
-	stg "github.com/alrund/yp-1/internal/app/storage"
+	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,11 +20,11 @@ func (st *TestGenerator) Generate() string {
 var us1 = &app.URLShortener{
 	Schema:         "http",
 	Host:           "localhost:8080",
-	Storage:        stg.NewMapStorage(),
+	Storage:        storage.NewMap(),
 	TokenGenerator: new(TestGenerator),
 }
 
-func TestAddHandler(t *testing.T) {
+func TestAdd(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -81,7 +81,7 @@ func TestAddHandler(t *testing.T) {
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddHandler(us1, w, r)
+				Add(us1, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()

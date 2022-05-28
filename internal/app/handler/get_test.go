@@ -9,7 +9,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	tkn "github.com/alrund/yp-1/internal/app/token"
-	gen "github.com/alrund/yp-1/internal/app/token/generator"
+	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,19 +31,19 @@ func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	}
 	return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
 }
-func (st *Storage) GetURL(tokenValue string) (string, error)     { return "https://ya.ru", nil }
-func (st *Storage) GetTokenByURL(url string) (*tkn.Token, error) { return nil, nil }
-func (st *Storage) HasURL(url string) (bool, error)              { return true, nil }
-func (st *Storage) Set(url string, token *tkn.Token) error       { return nil }
+func (st *Storage) GetURL(string) (string, error)            { return "https://ya.ru", nil }
+func (st *Storage) GetTokenByURL(string) (*tkn.Token, error) { return nil, nil }
+func (st *Storage) HasURL(string) (bool, error)              { return true, nil }
+func (st *Storage) Set(string, *tkn.Token) error             { return nil }
 
 var us2 = &app.URLShortener{
 	Schema:         "http",
 	Host:           "localhost:8080",
 	Storage:        new(Storage),
-	TokenGenerator: gen.NewSimpleGenerator(),
+	TokenGenerator: generator.NewSimple(),
 }
 
-func TestGetHandler(t *testing.T) {
+func TestGet(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -124,7 +124,7 @@ func TestGetHandler(t *testing.T) {
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				GetHandler(us2, w, r)
+				Get(us2, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()

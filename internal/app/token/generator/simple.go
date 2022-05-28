@@ -10,18 +10,18 @@ const (
 	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
-type SimpleGenerator struct{}
+type Simple struct{}
 
-func NewSimpleGenerator() *SimpleGenerator {
-	return &SimpleGenerator{}
+func NewSimple() *Simple {
+	return &Simple{}
 }
 
-func (st *SimpleGenerator) Generate() string {
+func (st *Simple) Generate() string {
 	rs := st.randomString(Length)
 	return rs
 }
 
-func (st *SimpleGenerator) randomString(n int) string {
+func (st *Simple) randomString(n int) string {
 	sb := strings.Builder{}
 	sb.Grow(n)
 	for i := 0; i < n; i++ {

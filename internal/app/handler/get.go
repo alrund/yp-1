@@ -4,15 +4,15 @@ import (
 	"errors"
 	"net/http"
 
-	stg "github.com/alrund/yp-1/internal/app/storage"
-	tkn "github.com/alrund/yp-1/internal/app/token"
+	"github.com/alrund/yp-1/internal/app/storage"
+	"github.com/alrund/yp-1/internal/app/token"
 )
 
 type Getter interface {
 	Get(tokenValue string) (string, error)
 }
 
-func GetHandler(us Getter, w http.ResponseWriter, r *http.Request) {
+func Get(us Getter, w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -25,12 +25,12 @@ func GetHandler(us Getter, w http.ResponseWriter, r *http.Request) {
 	}
 	url, err := us.Get(id)
 	if err != nil {
-		if errors.Is(err, stg.ErrTokenNotFound) {
+		if errors.Is(err, storage.ErrTokenNotFound) {
 			http.Error(w, "404 Not Found.", http.StatusNotFound)
 			return
 		}
 
-		if errors.Is(err, tkn.ErrTokenExpiredError) {
+		if errors.Is(err, token.ErrTokenExpiredError) {
 			http.Error(w, "498 Invalid Token.", 498)
 			return
 		}
