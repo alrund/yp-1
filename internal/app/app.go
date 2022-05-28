@@ -6,9 +6,9 @@ import (
 )
 
 type Storage interface {
-	Set(url string, token tkn.Token) error
-	GetToken(tokenValue string) (tkn.Token, error)
-	GetTokenByURL(url string) (tkn.Token, error)
+	Set(url string, token *tkn.Token) error
+	GetToken(tokenValue string) (*tkn.Token, error)
+	GetTokenByURL(url string) (*tkn.Token, error)
 	GetURL(tokenValue string) (string, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
@@ -39,15 +39,15 @@ func (us *URLShortener) Add(url string) (*tkn.Token, error) {
 			return nil, err
 		}
 		if token.IsExpired() {
-			err = us.Set(url, *token.Refresh())
+			err = us.Set(url, token.Refresh())
 			if err != nil {
 				return nil, err
 			}
 		}
-		return &token, nil
+		return token, nil
 	}
 	token := tkn.NewToken(us.TokenGenerator)
-	err = us.Set(url, *token)
+	err = us.Set(url, token)
 	if err != nil {
 		return nil, err
 	}
