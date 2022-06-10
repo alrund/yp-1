@@ -30,6 +30,10 @@ import (
 // Задача направлена на рефакторинг приложения с помощью готовой библиотеки.
 // Обратите внимание, что необязательно запускать приложение вручную: тесты,
 // которые вы написали до этого, помогут вам в рефакторинге.
+//
+// Инкремент 4
+// Добавьте в сервер новый эндпоинт POST /api/shorten,
+// принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.
 func main() {
 	us := &app.URLShortener{
 		Schema:         "http",
@@ -43,6 +47,11 @@ func main() {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		handler.Add(us, w, r)
 	}).Methods(http.MethodPost)
+
+	r.HandleFunc("/api/shorten", func(w http.ResponseWriter, r *http.Request) {
+		handler.AddJSON(us, w, r)
+	}).Methods(http.MethodPost)
+
 	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.Get(us, w, r)
 	}).Methods(http.MethodGet)
