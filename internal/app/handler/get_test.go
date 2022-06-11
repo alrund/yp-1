@@ -37,8 +37,8 @@ func (st *Storage) HasURL(string) (bool, error)              { return true, nil 
 func (st *Storage) Set(string, *tkn.Token) error             { return nil }
 
 var us2 = &app.URLShortener{
-	Schema:         "http",
-	Host:           "localhost:8080",
+	ServerAddress:  "localhost:8080",
+	BaseURL:        "http://localhost:8080/",
 	Storage:        new(Storage),
 	TokenGenerator: generator.NewSimple(),
 }

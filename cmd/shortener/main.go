@@ -8,8 +8,14 @@ import (
 	"github.com/alrund/yp-1/internal/app/handler"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/alrund/yp-1/internal/app/token/generator"
+	"github.com/caarlos0/env/v6"
 	"github.com/gorilla/mux"
 )
+
+type Config struct {
+	ServerAddress string `env:"SERVER_ADDRESS,required"`
+	BaseURL       string `env:"BASE_URL,required"`
+}
 
 // Инкремент 1
 // Сервер должен быть доступен по адресу: http://localhost:8080.
@@ -34,10 +40,20 @@ import (
 // Инкремент 4
 // Добавьте в сервер новый эндпоинт POST /api/shorten,
 // принимающий в теле запроса JSON-объект {"url":"<some_url>"} и возвращающий в ответ объект {"result":"<shorten_url>"}.
+//
+// Инкремент 5
+// Добавьте возможность конфигурировать сервис с помощью переменных окружения:
+// - адрес запуска HTTP-сервера с помощью переменной SERVER_ADDRESS.
+// - базовый адрес результирующего сокращённого URL с помощью переменной BASE_URL.
 func main() {
+	var cfg Config
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatal(err)
+	}
+
 	us := &app.URLShortener{
-		Schema:         "http",
-		Host:           "localhost:8080",
+		ServerAddress:  cfg.ServerAddress,
+		BaseURL:        cfg.BaseURL,
 		Storage:        storage.NewMap(),
 		TokenGenerator: generator.NewSimple(),
 	}
@@ -56,5 +72,5 @@ func main() {
 		handler.Get(us, w, r)
 	}).Methods(http.MethodGet)
 
-	log.Fatal(http.ListenAndServe(us.GetServerHost(), r))
+	log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
 }

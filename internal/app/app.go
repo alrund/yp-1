@@ -1,6 +1,8 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
@@ -15,18 +17,18 @@ type Storage interface {
 }
 
 type URLShortener struct {
-	Schema string
-	Host   string
+	ServerAddress string
+	BaseURL       string
 	Storage
 	TokenGenerator tkn.Generator
 }
 
-func (us *URLShortener) GetServerHost() string {
-	return us.Host
+func (us *URLShortener) GetServerAddress() string {
+	return us.ServerAddress
 }
 
-func (us *URLShortener) GetServerURL() string {
-	return us.Schema + "://" + us.Host + "/"
+func (us *URLShortener) GetBaseURL() string {
+	return strings.TrimRight(us.BaseURL, "/") + "/"
 }
 
 func (us *URLShortener) Add(url string) (*tkn.Token, error) {

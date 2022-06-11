@@ -19,8 +19,8 @@ func (st *TestGenerator) Generate() string {
 }
 
 var us1 = &app.URLShortener{
-	Schema:         "http",
-	Host:           "localhost:8080",
+	ServerAddress:  "localhost:8080",
+	BaseURL:        "http://localhost:8080/",
 	Storage:        storage.NewMap(),
 	TokenGenerator: new(TestGenerator),
 }
@@ -48,7 +48,7 @@ func TestAdd(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    us1.GetServerURL() + us1.TokenGenerator.Generate(),
+				response:    us1.GetBaseURL() + us1.TokenGenerator.Generate(),
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -128,7 +128,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + us1.GetServerURL() + us1.TokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + us1.GetBaseURL() + us1.TokenGenerator.Generate() + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
@@ -142,7 +142,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + us1.GetServerURL() + us1.TokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + us1.GetBaseURL() + us1.TokenGenerator.Generate() + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},

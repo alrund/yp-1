@@ -10,7 +10,7 @@ import (
 )
 
 type Adder interface {
-	GetServerURL() string
+	GetBaseURL() string
 	Add(url string) (*tkn.Token, error)
 }
 
@@ -47,7 +47,7 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write([]byte(us.GetServerURL() + token.Value))
+	_, err = w.Write([]byte(us.GetBaseURL() + token.Value))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -89,7 +89,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse := JSONResponse{Result: us.GetServerURL() + token.Value}
+	jsonResponse := JSONResponse{Result: us.GetBaseURL() + token.Value}
 	result, err := json.Marshal(jsonResponse)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
