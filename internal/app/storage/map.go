@@ -1,15 +1,9 @@
 package storage
 
 import (
-	"errors"
 	"sync"
 
 	tkn "github.com/alrund/yp-1/internal/app/token"
-)
-
-var (
-	ErrURLNotFound   = errors.New("url not found")
-	ErrTokenNotFound = errors.New("token not found")
 )
 
 type composite struct {

@@ -13,8 +13,9 @@ import (
 )
 
 type Config struct {
-	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
+	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
 // Инкремент 1
@@ -45,16 +46,33 @@ type Config struct {
 // Добавьте возможность конфигурировать сервис с помощью переменных окружения:
 // - адрес запуска HTTP-сервера с помощью переменной SERVER_ADDRESS.
 // - базовый адрес результирующего сокращённого URL с помощью переменной BASE_URL.
+//
+// Инкремент 6
+// Сохраняйте все сокращённые URL на диск в виде файла. При перезапуске приложения все URL должны быть восстановлены.
+// Путь до файла должен передаваться в переменной окружения FILE_STORAGE_PATH.
+// При отсутствии переменной окружения или при её пустом значении вернитесь к хранению сокращённых URL в памяти.
 func main() {
-	var cfg Config
-	if err := env.Parse(&cfg); err != nil {
+	var (
+		err  error
+		cfg  Config
+		strg app.Storage = storage.NewMap()
+	)
+
+	if err = env.Parse(&cfg); err != nil {
 		log.Fatal(err)
+	}
+
+	if cfg.FileStoragePath != "" {
+		strg, err = storage.NewFile(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	us := &app.URLShortener{
 		ServerAddress:  cfg.ServerAddress,
 		BaseURL:        cfg.BaseURL,
-		Storage:        storage.NewMap(),
+		Storage:        strg,
 		TokenGenerator: generator.NewSimple(),
 	}
 
