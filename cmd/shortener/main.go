@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
@@ -51,6 +52,12 @@ type Config struct {
 // Сохраняйте все сокращённые URL на диск в виде файла. При перезапуске приложения все URL должны быть восстановлены.
 // Путь до файла должен передаваться в переменной окружения FILE_STORAGE_PATH.
 // При отсутствии переменной окружения или при её пустом значении вернитесь к хранению сокращённых URL в памяти.
+//
+// Инкремент 7
+// Поддержите конфигурирование сервиса с помощью флагов командной строки наравне с уже имеющимися переменными окружения:
+// флаг -a, отвечающий за адрес запуска HTTP-сервера (переменная SERVER_ADDRESS);
+// флаг -b, отвечающий за базовый адрес результирующего сокращённого URL (переменная BASE_URL);
+// флаг -f, отвечающий за путь до файла с сокращёнными URL (переменная FILE_STORAGE_PATH).
 func main() {
 	var (
 		err  error
@@ -61,6 +68,11 @@ func main() {
 	if err = env.Parse(&cfg); err != nil {
 		log.Fatal(err)
 	}
+
+	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Адрес запуска HTTP-сервера")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Базовый адрес результирующего сокращённого URL")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "Путь до файла с сокращёнными URL")
+	flag.Parse()
 
 	if cfg.FileStoragePath != "" {
 		strg, err = storage.NewFile(cfg.FileStoragePath)
