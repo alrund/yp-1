@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/alrund/yp-1/internal/app/config"
 	"log"
 	"net/http"
 
@@ -9,15 +10,8 @@ import (
 	"github.com/alrund/yp-1/internal/app/handler"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/alrund/yp-1/internal/app/token/generator"
-	"github.com/caarlos0/env/v6"
 	"github.com/gorilla/mux"
 )
-
-type Config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH"`
-}
 
 // Инкремент 1
 // Сервер должен быть доступен по адресу: http://localhost:8080.
@@ -58,23 +52,22 @@ type Config struct {
 // флаг -a, отвечающий за адрес запуска HTTP-сервера (переменная SERVER_ADDRESS);
 // флаг -b, отвечающий за базовый адрес результирующего сокращённого URL (переменная BASE_URL);
 // флаг -f, отвечающий за путь до файла с сокращёнными URL (переменная FILE_STORAGE_PATH).
+//
+// Инкремент 8
+// Добавьте поддержку gzip в ваш сервис. Научите его:
+// принимать запросы в сжатом формате (HTTP-заголовок Content-Encoding);
+// отдавать сжатый ответ клиенту, который поддерживает обработку сжатых ответов (HTTP-заголовок Accept-Encoding).
 func main() {
-	var (
-		err  error
-		cfg  Config
-		strg app.Storage = storage.NewMap()
-	)
-
-	if err = env.Parse(&cfg); err != nil {
-		log.Fatal(err)
-	}
+	cfg := config.GetConfig()
 
 	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Адрес запуска HTTP-сервера")
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "Путь до файла с сокращёнными URL")
 	flag.Parse()
 
+	var strg app.Storage = storage.NewMap()
 	if cfg.FileStoragePath != "" {
+		var err error
 		strg, err = storage.NewFile(cfg.FileStoragePath)
 		if err != nil {
 			log.Fatal(err)
@@ -82,8 +75,7 @@ func main() {
 	}
 
 	us := &app.URLShortener{
-		ServerAddress:  cfg.ServerAddress,
-		BaseURL:        cfg.BaseURL,
+		Config:         cfg,
 		Storage:        strg,
 		TokenGenerator: generator.NewSimple(),
 	}

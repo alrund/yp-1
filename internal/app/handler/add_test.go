@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/alrund/yp-1/internal/app/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -19,8 +20,10 @@ func (st *TestGenerator) Generate() string {
 }
 
 var us1 = &app.URLShortener{
-	ServerAddress:  "localhost:8080",
-	BaseURL:        "http://localhost:8080/",
+	Config: &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	},
 	Storage:        storage.NewMap(),
 	TokenGenerator: new(TestGenerator),
 }
