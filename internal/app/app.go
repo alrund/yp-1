@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/alrund/yp-1/internal/app/config"
 	"strings"
 
+	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )

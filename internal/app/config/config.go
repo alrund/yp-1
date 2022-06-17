@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/caarlos0/env/v6"
 	"log"
 	"sync"
+
+	"github.com/caarlos0/env/v6"
 )
 
 type Config struct {
@@ -12,8 +13,10 @@ type Config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
-var instance *Config
-var once sync.Once
+var (
+	instance *Config
+	once     sync.Once
+)
 
 func GetConfig() *Config {
 	once.Do(func() {

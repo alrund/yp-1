@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/alrund/yp-1/internal/app/config"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alrund/yp-1/internal/app"
+	"github.com/alrund/yp-1/internal/app/config"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"

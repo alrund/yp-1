@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"github.com/alrund/yp-1/internal/app/config"
 	"log"
 	"net/http"
 
 	"github.com/alrund/yp-1/internal/app"
+	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/handler"
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/gorilla/mux"
@@ -93,6 +94,9 @@ func main() {
 	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		handler.Get(us, w, r)
 	}).Methods(http.MethodGet)
+
+	r.Use(middleware.Compress)
+	r.Use(middleware.Decompress)
 
 	log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
 }
