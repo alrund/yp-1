@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alrund/yp-1/internal/app"
+	"github.com/alrund/yp-1/internal/app/config"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"
@@ -37,8 +38,10 @@ func (st *Storage) HasURL(string) (bool, error)              { return true, nil 
 func (st *Storage) Set(string, *tkn.Token) error             { return nil }
 
 var us2 = &app.URLShortener{
-	Schema:         "http",
-	Host:           "localhost:8080",
+	Config: &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	},
 	Storage:        new(Storage),
 	TokenGenerator: generator.NewSimple(),
 }
