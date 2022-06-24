@@ -11,7 +11,7 @@ import (
 
 type Adder interface {
 	GetBaseURL() string
-	Add(url string) (*tkn.Token, error)
+	Add(userId, url string) (*tkn.Token, error)
 }
 
 type JSONRequest struct {
@@ -39,7 +39,9 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := us.Add(string(b))
+	userId := ""
+
+	token, err := us.Add(userId, string(b))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -83,7 +85,9 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := us.Add(jsonRequest.URL)
+	userId := ""
+
+	token, err := us.Add(userId, jsonRequest.URL)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
