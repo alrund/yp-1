@@ -9,10 +9,10 @@ import (
 )
 
 type Storage interface {
-	Set(userId, url string, token *tkn.Token) error
+	Set(userID, url string, token *tkn.Token) error
 	GetToken(tokenValue string) (*tkn.Token, error)
 	GetTokenByURL(url string) (*tkn.Token, error)
-	GetTokenByUserId(userId string) (*tkn.Token, error)
+	GetTokenByUserID(userID string) (*tkn.Token, error)
 	GetURL(tokenValue string) (string, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
@@ -32,7 +32,7 @@ func (us *URLShortener) GetBaseURL() string {
 	return strings.TrimRight(us.Config.BaseURL, "/") + "/"
 }
 
-func (us *URLShortener) Add(userId, url string) (*tkn.Token, error) {
+func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 	ok, err := us.HasURL(url)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (us *URLShortener) Add(userId, url string) (*tkn.Token, error) {
 			return nil, err
 		}
 		if token.IsExpired() {
-			err = us.Set(userId, url, token.Refresh())
+			err = us.Set(userID, url, token.Refresh())
 			if err != nil {
 				return nil, err
 			}
@@ -51,7 +51,7 @@ func (us *URLShortener) Add(userId, url string) (*tkn.Token, error) {
 		return token, nil
 	}
 	token := tkn.NewToken(us.TokenGenerator)
-	err = us.Set(userId, url, token)
+	err = us.Set(userID, url, token)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,6 @@ import (
 
 type composite struct {
 	Token  *tkn.Token
-	Url    string
-	UserId string
+	URL    string
+	UserID string
 }

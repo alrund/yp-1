@@ -7,7 +7,7 @@ import (
 )
 
 type Map struct {
-	userId2tokenValue    map[string]string
+	userID2tokenValue    map[string]string
 	url2tokenValue       map[string]string
 	tokenValue2composite map[string]*composite
 	mx                   sync.RWMutex
@@ -15,17 +15,17 @@ type Map struct {
 
 func NewMap() *Map {
 	return &Map{
-		userId2tokenValue:    make(map[string]string),
+		userID2tokenValue:    make(map[string]string),
 		url2tokenValue:       make(map[string]string),
 		tokenValue2composite: make(map[string]*composite),
 	}
 }
 
-func (s *Map) Set(userId, url string, token *tkn.Token) error {
+func (s *Map) Set(userID, url string, token *tkn.Token) error {
 	s.mx.Lock()
-	s.userId2tokenValue[userId] = token.Value
+	s.userID2tokenValue[userID] = token.Value
 	s.url2tokenValue[url] = token.Value
-	s.tokenValue2composite[token.Value] = &composite{token, url, userId}
+	s.tokenValue2composite[token.Value] = &composite{token, url, userID}
 	s.mx.Unlock()
 	return nil
 }
@@ -48,10 +48,10 @@ func (s *Map) GetTokenByURL(url string) (*tkn.Token, error) {
 	return nil, ErrTokenNotFound
 }
 
-func (s *Map) GetTokenByUserId(userId string) (*tkn.Token, error) {
+func (s *Map) GetTokenByUserID(userID string) (*tkn.Token, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
-	if tokenValue, ok := s.userId2tokenValue[userId]; ok {
+	if tokenValue, ok := s.userID2tokenValue[userID]; ok {
 		return s.GetToken(tokenValue)
 	}
 	return nil, ErrTokenNotFound
@@ -61,7 +61,7 @@ func (s *Map) GetURL(tokenValue string) (string, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 	if value, ok := s.tokenValue2composite[tokenValue]; ok {
-		return value.Url, nil
+		return value.URL, nil
 	}
 	return "", ErrURLNotFound
 }

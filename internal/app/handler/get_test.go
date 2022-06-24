@@ -33,7 +33,7 @@ func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
 }
 func (st *Storage) GetURL(string) (string, error)               { return "https://ya.ru", nil }
-func (st *Storage) GetTokenByUserId(string) (*tkn.Token, error) { return nil, nil }
+func (st *Storage) GetTokenByUserID(string) (*tkn.Token, error) { return nil, nil }
 func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)    { return nil, nil }
 func (st *Storage) HasURL(string) (bool, error)                 { return true, nil }
 func (st *Storage) Set(string, string, *tkn.Token) error        { return nil }

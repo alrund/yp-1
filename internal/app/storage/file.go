@@ -20,7 +20,7 @@ func NewFile(fileName string) (*File, error) {
 	}, nil
 }
 
-func (s *File) Set(userId, url string, token *tkn.Token) error {
+func (s *File) Set(userID, url string, token *tkn.Token) error {
 	state, err := s.restoreState()
 	if err != nil {
 		return err
@@ -28,8 +28,8 @@ func (s *File) Set(userId, url string, token *tkn.Token) error {
 
 	composite := state[url]
 	composite.Token = token
-	composite.Url = url
-	composite.UserId = userId
+	composite.URL = url
+	composite.UserID = userID
 	state[url] = composite
 
 	return s.saveState(state)
@@ -68,14 +68,14 @@ func (s *File) GetTokenByURL(url string) (*tkn.Token, error) {
 	return nil, ErrTokenNotFound
 }
 
-func (s *File) GetTokenByUserId(userId string) (*tkn.Token, error) {
+func (s *File) GetTokenByUserID(userID string) (*tkn.Token, error) {
 	state, err := s.restoreState()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, composite := range state {
-		if userId == composite.UserId {
+		if userID == composite.UserID {
 			return composite.Token, nil
 		}
 	}

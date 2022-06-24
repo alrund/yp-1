@@ -26,7 +26,11 @@ func TestFileGetToken(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "yyy",
 			},
@@ -35,7 +39,11 @@ func TestFileGetToken(t *testing.T) {
 		},
 		{
 			"fail",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "zzz",
 			},
@@ -76,7 +84,11 @@ func TestFileGetTokenByURL(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				url: "url",
 			},
@@ -85,7 +97,11 @@ func TestFileGetTokenByURL(t *testing.T) {
 		},
 		{
 			"fail",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				url: "zzz",
 			},
@@ -114,7 +130,7 @@ func TestFileGetTokenByURL(t *testing.T) {
 
 func TestFileGetTokenByUserIdL(t *testing.T) {
 	type args struct {
-		userId string
+		userID string
 	}
 	tests := []struct {
 		name         string
@@ -125,18 +141,26 @@ func TestFileGetTokenByUserIdL(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
-				userId: "XXX-YYY-ZZZ",
+				userID: "XXX-YYY-ZZZ",
 			},
 			"yyy",
 			false,
 		},
 		{
 			"fail",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
-				userId: "zzz",
+				userID: "zzz",
 			},
 			"",
 			true,
@@ -149,7 +173,7 @@ func TestFileGetTokenByUserIdL(t *testing.T) {
 			storage := &File{
 				FileName: TestStorageFileName,
 			}
-			got, err := storage.GetTokenByUserId(tt.args.userId)
+			got, err := storage.GetTokenByUserID(tt.args.userID)
 			if tt.want != "" {
 				require.NotNil(t, got)
 				assert.Equal(t, tt.want, got.Value)
@@ -174,7 +198,11 @@ func TestFileGetURL(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "xxx",
 			},
@@ -183,7 +211,11 @@ func TestFileGetURL(t *testing.T) {
 		},
 		{
 			"fail",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "zzz",
 			},
@@ -223,7 +255,11 @@ func TestFileHasToken(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "xxx",
 			},
@@ -232,7 +268,11 @@ func TestFileHasToken(t *testing.T) {
 		},
 		{
 			"success not found",
-			`{"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				tokenValue: "zzz",
 			},
@@ -270,7 +310,11 @@ func TestFileHasURL(t *testing.T) {
 	}{
 		{
 			"success",
-			`{"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				url: "url",
 			},
@@ -279,7 +323,11 @@ func TestFileHasURL(t *testing.T) {
 		},
 		{
 			"success not found",
-			`{"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},"Url":"url","UserId":"XXX-YYY-ZZZ"}}`,
+			`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
 			args{
 				url: "zzz",
 			},
@@ -306,7 +354,7 @@ func TestFileHasURL(t *testing.T) {
 
 func TestFileSet(t *testing.T) {
 	type args struct {
-		userId string
+		userID string
 		url    string
 		token  *tkn.Token
 	}
@@ -319,7 +367,7 @@ func TestFileSet(t *testing.T) {
 		{
 			"success",
 			args{
-				userId: "XXX-YYY-ZZZ",
+				userID: "XXX-YYY-ZZZ",
 				url:    "url",
 				token: &tkn.Token{
 					Value:  "yyy",
@@ -336,7 +384,7 @@ func TestFileSet(t *testing.T) {
 			storage := &File{
 				FileName: TestStorageFileName,
 			}
-			err := storage.Set(tt.args.userId, tt.args.url, tt.args.token)
+			err := storage.Set(tt.args.userID, tt.args.url, tt.args.token)
 			state, storageErr := storage.restoreState()
 			if storageErr != nil {
 				log.Fatal(storageErr)
