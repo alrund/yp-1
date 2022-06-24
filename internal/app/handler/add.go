@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"io"
 	"mime"
 	"net/http"
@@ -39,7 +40,7 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ""
+	userID := getUserId()
 
 	token, err := us.Add(userID, string(b))
 	if err != nil {
@@ -85,7 +86,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ""
+	userID := getUserId()
 
 	token, err := us.Add(userID, jsonRequest.URL)
 	if err != nil {
@@ -116,4 +117,9 @@ func hasContentType(r *http.Request, mimetype string) bool {
 		return true
 	}
 	return false
+}
+
+func getUserId() string {
+	id := uuid.New()
+	return id.String()
 }
