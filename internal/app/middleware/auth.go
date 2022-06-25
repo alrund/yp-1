@@ -20,7 +20,7 @@ func Auth(next http.Handler) http.Handler {
 			http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
 			return
 		}
-		
+
 		if userID == "" {
 			userID = uuid.New().String()
 			AddCookie(userID, w)

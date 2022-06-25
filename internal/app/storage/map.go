@@ -7,7 +7,7 @@ import (
 )
 
 type Map struct {
-	userID2tokenValue    map[string]string
+	userID2tokenValue    map[string][]string
 	url2tokenValue       map[string]string
 	tokenValue2composite map[string]*composite
 	mx                   sync.RWMutex
@@ -15,7 +15,7 @@ type Map struct {
 
 func NewMap() *Map {
 	return &Map{
-		userID2tokenValue:    make(map[string]string),
+		userID2tokenValue:    make(map[string][]string),
 		url2tokenValue:       make(map[string]string),
 		tokenValue2composite: make(map[string]*composite),
 	}
@@ -23,7 +23,11 @@ func NewMap() *Map {
 
 func (s *Map) Set(userID, url string, token *tkn.Token) error {
 	s.mx.Lock()
-	s.userID2tokenValue[userID] = token.Value
+	_, ok := s.userID2tokenValue[userID]
+	if !ok {
+		s.userID2tokenValue[userID] = []string{}
+	}
+	s.userID2tokenValue[userID] = append(s.userID2tokenValue[userID], token.Value)
 	s.url2tokenValue[url] = token.Value
 	s.tokenValue2composite[token.Value] = &composite{token, url, userID}
 	s.mx.Unlock()
@@ -53,12 +57,14 @@ func (s *Map) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	defer s.mx.RUnlock()
 
 	tokens := make([]*tkn.Token, 0)
-	if tokenValue, ok := s.userID2tokenValue[userID]; ok {
-		token, err := s.GetToken(tokenValue)
-		if err != nil {
-			return nil, err
+	if tokenValues, ok := s.userID2tokenValue[userID]; ok {
+		for _, tokenValue := range tokenValues {
+			token, err := s.GetToken(tokenValue)
+			if err != nil {
+				return nil, err
+			}
+			tokens = append(tokens, token)
 		}
-		tokens = append(tokens, token)
 	}
 
 	if len(tokens) > 0 {

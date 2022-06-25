@@ -153,7 +153,7 @@ func TestGetTokensByUserID(t *testing.T) {
 		{
 			"success",
 			&Map{
-				userID2tokenValue: map[string]string{"XXX-YYY-ZZZ": "xxx"},
+				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"xxx"}},
 				url2tokenValue:    map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -175,7 +175,7 @@ func TestGetTokensByUserID(t *testing.T) {
 		{
 			"fail",
 			&Map{
-				userID2tokenValue: map[string]string{"XXX-YYY-ZZZ": "xxx"},
+				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"xxx"}},
 				url2tokenValue:    map[string]string{"url": "xxx"},
 				tokenValue2composite: map[string]*composite{
 					"xxx": {
@@ -417,7 +417,7 @@ func TestSet(t *testing.T) {
 		{
 			"success",
 			&Map{
-				userID2tokenValue:    make(map[string]string),
+				userID2tokenValue:    make(map[string][]string),
 				url2tokenValue:       map[string]string{},
 				tokenValue2composite: map[string]*composite{},
 			},
@@ -437,7 +437,7 @@ func TestSet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.storage.Set(tt.args.userID, tt.args.url, tt.args.token)
 			assert.Equal(t, tt.want, tt.storage.url2tokenValue[tt.args.url])
-			assert.Equal(t, tt.want, tt.storage.userID2tokenValue[tt.args.userID])
+			assert.Equal(t, tt.want, tt.storage.userID2tokenValue[tt.args.userID][0])
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			}
@@ -453,7 +453,7 @@ func TestNewMapStorage(t *testing.T) {
 		{
 			name: "success",
 			want: &Map{
-				userID2tokenValue:    make(map[string]string),
+				userID2tokenValue:    make(map[string][]string),
 				url2tokenValue:       make(map[string]string),
 				tokenValue2composite: make(map[string]*composite),
 			},
