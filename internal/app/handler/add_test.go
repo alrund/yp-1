@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -37,6 +39,7 @@ func TestAdd(t *testing.T) {
 	type request struct {
 		method string
 		target string
+		userID string
 	}
 	tests := []struct {
 		name    string
@@ -48,6 +51,7 @@ func TestAdd(t *testing.T) {
 			request: request{
 				method: http.MethodPost,
 				target: "/",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusCreated,
@@ -60,6 +64,7 @@ func TestAdd(t *testing.T) {
 			request: request{
 				method: http.MethodGet,
 				target: "/",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusMethodNotAllowed,
@@ -72,6 +77,7 @@ func TestAdd(t *testing.T) {
 			request: request{
 				method: http.MethodPost,
 				target: "/incorrect",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusBadRequest,
@@ -82,7 +88,7 @@ func TestAdd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
+			request := getNewRequestWithUserId(tt.request.method, tt.request.target, tt.request.userID, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Add(us1, w, r)
@@ -113,6 +119,7 @@ func TestAddJSON(t *testing.T) {
 	type request struct {
 		method      string
 		target      string
+		userID      string
 		body        string
 		contentType string
 	}
@@ -126,6 +133,7 @@ func TestAddJSON(t *testing.T) {
 			request: request{
 				method:      http.MethodPost,
 				target:      "/api/shorten",
+				userID:      "XXX-YYY-ZZZ",
 				body:        `{"url": "https://ya.ru"}`,
 				contentType: "application/json; charset=utf-8",
 			},
@@ -140,6 +148,7 @@ func TestAddJSON(t *testing.T) {
 			request: request{
 				method:      http.MethodPost,
 				target:      "/api/shorten",
+				userID:      "XXX-YYY-ZZZ",
 				body:        `{"url": "https://ya.ru"}`,
 				contentType: "application/json",
 			},
@@ -154,6 +163,7 @@ func TestAddJSON(t *testing.T) {
 			request: request{
 				method:      http.MethodPost,
 				target:      "/api/shorten",
+				userID:      "XXX-YYY-ZZZ",
 				body:        `{"url": "https://ya.ru"}`,
 				contentType: "text/plain; charset=utf-8",
 			},
@@ -168,6 +178,7 @@ func TestAddJSON(t *testing.T) {
 			request: request{
 				method: http.MethodGet,
 				target: "/api/shorten",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusMethodNotAllowed,
@@ -190,7 +201,12 @@ func TestAddJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(tt.request.method, tt.request.target, strings.NewReader(tt.request.body))
+			request := getNewRequestWithUserId(
+				tt.request.method,
+				tt.request.target,
+				tt.request.userID,
+				strings.NewReader(tt.request.body),
+			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -211,4 +227,11 @@ func TestAddJSON(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+func getNewRequestWithUserId(method, target, userID string, body io.Reader) *http.Request {
+	request := httptest.NewRequest(method, target, body)
+	ctx := request.Context()
+	ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
+	return request.WithContext(ctx)
 }

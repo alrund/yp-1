@@ -2,7 +2,7 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"io"
 	"mime"
 	"net/http"
@@ -34,13 +34,18 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contextUserID := r.Context().Value(middleware.UserIDContextKey)
+	userID, ok := contextUserID.(string)
+	if ok == false {
+		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
+		return
+	}
+
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-
-	userID := getUserId()
 
 	token, err := us.Add(userID, string(b))
 	if err != nil {
@@ -73,6 +78,13 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contextUserID := r.Context().Value(middleware.UserIDContextKey)
+	userID, ok := contextUserID.(string)
+	if ok == false {
+		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
+		return
+	}
+
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -85,8 +97,6 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "400 Bad Request.", http.StatusBadRequest)
 		return
 	}
-
-	userID := getUserId()
 
 	token, err := us.Add(userID, jsonRequest.URL)
 	if err != nil {
@@ -117,9 +127,4 @@ func hasContentType(r *http.Request, mimetype string) bool {
 		return true
 	}
 	return false
-}
-
-func getUserId() string {
-	id := uuid.New()
-	return id.String()
 }
