@@ -1,12 +1,12 @@
 package storage
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetToken(t *testing.T) {

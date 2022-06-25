@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 )
@@ -88,7 +88,7 @@ func TestAdd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := getNewRequestWithUserId(tt.request.method, tt.request.target, tt.request.userID, nil)
+			request := getNewRequestWithUserID(tt.request.method, tt.request.target, tt.request.userID, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Add(us1, w, r)
@@ -201,7 +201,7 @@ func TestAddJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			request := getNewRequestWithUserId(
+			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
 				tt.request.userID,
@@ -229,7 +229,7 @@ func TestAddJSON(t *testing.T) {
 	}
 }
 
-func getNewRequestWithUserId(method, target, userID string, body io.Reader) *http.Request {
+func getNewRequestWithUserID(method, target, userID string, body io.Reader) *http.Request {
 	request := httptest.NewRequest(method, target, body)
 	ctx := request.Context()
 	ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)

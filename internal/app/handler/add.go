@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"io"
 	"mime"
 	"net/http"
 
+	"github.com/alrund/yp-1/internal/app/middleware"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
@@ -36,7 +36,7 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)
-	if ok == false {
+	if !ok {
 		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
 		return
 	}
@@ -80,7 +80,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)
-	if ok == false {
+	if !ok {
 		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
 		return
 	}

@@ -3,16 +3,16 @@ package handler
 import (
 	"encoding/json"
 	"errors"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"net/http"
 
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/alrund/yp-1/internal/app/token"
 )
 
 type Getter interface {
 	Get(tokenValue string) (string, error)
-	GetUserURLs(userID string) ([]storage.URLs, error)
+	GetUserURLs(userID string) ([]storage.URLpairs, error)
 }
 
 func Get(us Getter, w http.ResponseWriter, r *http.Request) {
@@ -59,7 +59,7 @@ func GetUserURLs(us Getter, w http.ResponseWriter, r *http.Request) {
 
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)
-	if ok == false {
+	if !ok {
 		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
 		return
 	}
@@ -76,6 +76,10 @@ func GetUserURLs(us Getter, w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := json.Marshal(urls)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 
 	_, err = w.Write(result)
 	if err != nil {

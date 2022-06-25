@@ -139,19 +139,19 @@ func (s *File) HasToken(tokenValue string) (bool, error) {
 	return false, nil
 }
 
-func (s *File) GetURLsByUserID(userID, baseURL string) ([]URLs, error) {
+func (s *File) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
 	tokens, err := s.GetTokensByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	urls := make([]URLs, 0)
+	urls := make([]URLpairs, 0)
 	for _, token := range tokens {
 		originalURL, err := s.GetURL(token.Value)
 		if err != nil {
 			return nil, err
 		}
-		urls = append(urls, URLs{ShortURL: baseURL + token.Value, OriginalURL: originalURL})
+		urls = append(urls, URLpairs{ShortURL: baseURL + token.Value, OriginalURL: originalURL})
 	}
 
 	if len(urls) > 0 {

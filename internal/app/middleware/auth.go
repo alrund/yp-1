@@ -2,11 +2,14 @@ package middleware
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
-const UserIDContextKey = "userID"
+type ContextKey string
+
+const UserIDContextKey ContextKey = "userID"
 
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

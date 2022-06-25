@@ -2,17 +2,16 @@ package handler
 
 import (
 	"context"
-	"github.com/alrund/yp-1/internal/app"
-	"github.com/alrund/yp-1/internal/app/middleware"
-	"github.com/alrund/yp-1/internal/app/storage"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	//"github.com/alrund/yp-1/internal/app"
+	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/middleware"
+	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"
@@ -36,12 +35,12 @@ func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	}
 	return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
 }
-func (st *Storage) GetURL(string) (string, error)                          { return "https://ya.ru", nil }
-func (st *Storage) GetTokensByUserID(string) ([]*tkn.Token, error)         { return nil, nil }
-func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)               { return nil, nil }
-func (st *Storage) GetURLsByUserID(string, string) ([]storage.URLs, error) { return nil, nil }
-func (st *Storage) HasURL(string) (bool, error)                            { return true, nil }
-func (st *Storage) Set(string, string, *tkn.Token) error                   { return nil }
+func (st *Storage) GetURL(string) (string, error)                              { return "https://ya.ru", nil }
+func (st *Storage) GetTokensByUserID(string) ([]*tkn.Token, error)             { return nil, nil }
+func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)                   { return nil, nil }
+func (st *Storage) GetURLsByUserID(string, string) ([]storage.URLpairs, error) { return nil, nil }
+func (st *Storage) HasURL(string) (bool, error)                                { return true, nil }
+func (st *Storage) Set(string, string, *tkn.Token) error                       { return nil }
 
 var us2 = &app.URLShortener{
 	Config: &config.Config{

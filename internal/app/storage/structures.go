@@ -10,7 +10,7 @@ type composite struct {
 	UserID string
 }
 
-type URLs struct {
+type URLpairs struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
