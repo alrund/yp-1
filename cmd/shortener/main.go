@@ -51,8 +51,13 @@ func main() {
 		handler.Get(us, w, r)
 	}).Methods(http.MethodGet)
 
+	r.HandleFunc("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
+		handler.GetUserURLs(us, w, r)
+	}).Methods(http.MethodGet)
+
 	r.Use(middleware.Compress)
 	r.Use(middleware.Decompress)
+	r.Use(middleware.Auth)
 
 	log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
 }
