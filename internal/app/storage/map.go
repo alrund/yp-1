@@ -48,12 +48,23 @@ func (s *Map) GetTokenByURL(url string) (*tkn.Token, error) {
 	return nil, ErrTokenNotFound
 }
 
-func (s *Map) GetTokenByUserID(userID string) (*tkn.Token, error) {
+func (s *Map) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
+
+	tokens := make([]*tkn.Token, 0)
 	if tokenValue, ok := s.userID2tokenValue[userID]; ok {
-		return s.GetToken(tokenValue)
+		token, err := s.GetToken(tokenValue)
+		if err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
 	}
+
+	if len(tokens) > 0 {
+		return tokens, nil
+	}
+
 	return nil, ErrTokenNotFound
 }
 
@@ -82,4 +93,26 @@ func (s *Map) HasToken(tokenValue string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func (s *Map) GetURLsByUserID(userID, baseURL string) ([]URLs, error) {
+	tokens, err := s.GetTokensByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	urls := make([]URLs, 0)
+	for _, token := range tokens {
+		originalURL, err := s.GetURL(token.Value)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, URLs{ShortURL: baseURL + token.Value, OriginalURL: originalURL})
+	}
+
+	if len(urls) > 0 {
+		return urls, nil
+	}
+
+	return nil, ErrURLNotFound
 }

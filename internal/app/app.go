@@ -12,8 +12,9 @@ type Storage interface {
 	Set(userID, url string, token *tkn.Token) error
 	GetToken(tokenValue string) (*tkn.Token, error)
 	GetTokenByURL(url string) (*tkn.Token, error)
-	GetTokenByUserID(userID string) (*tkn.Token, error)
+	GetTokensByUserID(userID string) ([]*tkn.Token, error)
 	GetURL(tokenValue string) (string, error)
+	GetURLsByUserID(userID, baseURL string) ([]storage.URLs, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
 }
@@ -73,4 +74,8 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 		return us.GetURL(tokenValue)
 	}
 	return "", storage.ErrTokenNotFound
+}
+
+func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLs, error) {
+	return us.GetURLsByUserID(userID, us.GetBaseURL())
 }

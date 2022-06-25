@@ -128,7 +128,7 @@ func TestFileGetTokenByURL(t *testing.T) {
 	}
 }
 
-func TestFileGetTokenByUserIdL(t *testing.T) {
+func TestFileGetTokensByUserID(t *testing.T) {
 	type args struct {
 		userID string
 	}
@@ -173,10 +173,11 @@ func TestFileGetTokenByUserIdL(t *testing.T) {
 			storage := &File{
 				FileName: TestStorageFileName,
 			}
-			got, err := storage.GetTokenByUserID(tt.args.userID)
+			got, err := storage.GetTokensByUserID(tt.args.userID)
 			if tt.want != "" {
 				require.NotNil(t, got)
-				assert.Equal(t, tt.want, got.Value)
+				require.Greater(t, len(got), 0)
+				assert.Equal(t, tt.want, got[0].Value)
 			}
 			if tt.wantErr {
 				assert.NotNil(t, err)

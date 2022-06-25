@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
@@ -138,7 +139,7 @@ func TestGetTokenByURL(t *testing.T) {
 	}
 }
 
-func TestGetTokenByUserId(t *testing.T) {
+func TestGetTokensByUserID(t *testing.T) {
 	type args struct {
 		userID string
 	}
@@ -196,9 +197,11 @@ func TestGetTokenByUserId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.storage.GetTokenByUserID(tt.args.userID)
+			got, err := tt.storage.GetTokensByUserID(tt.args.userID)
 			if tt.want != "" {
-				assert.Equal(t, tt.want, got.Value)
+				require.NotNil(t, got)
+				require.Greater(t, len(got), 0)
+				assert.Equal(t, tt.want, got[0].Value)
 			}
 			if tt.wantErr {
 				assert.NotNil(t, err)

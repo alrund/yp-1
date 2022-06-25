@@ -68,16 +68,21 @@ func (s *File) GetTokenByURL(url string) (*tkn.Token, error) {
 	return nil, ErrTokenNotFound
 }
 
-func (s *File) GetTokenByUserID(userID string) (*tkn.Token, error) {
+func (s *File) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	state, err := s.restoreState()
 	if err != nil {
 		return nil, err
 	}
 
+	tokens := make([]*tkn.Token, 0)
 	for _, composite := range state {
 		if userID == composite.UserID {
-			return composite.Token, nil
+			tokens = append(tokens, composite.Token)
 		}
+	}
+
+	if len(tokens) > 0 {
+		return tokens, nil
 	}
 
 	return nil, ErrTokenNotFound
@@ -132,6 +137,28 @@ func (s *File) HasToken(tokenValue string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (s *File) GetURLsByUserID(userID, baseURL string) ([]URLs, error) {
+	tokens, err := s.GetTokensByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	urls := make([]URLs, 0)
+	for _, token := range tokens {
+		originalURL, err := s.GetURL(token.Value)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, URLs{ShortURL: baseURL + token.Value, OriginalURL: originalURL})
+	}
+
+	if len(urls) > 0 {
+		return urls, nil
+	}
+
+	return nil, ErrURLNotFound
 }
 
 func (s *File) saveState(state map[string]composite) error {
