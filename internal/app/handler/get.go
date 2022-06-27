@@ -81,6 +81,7 @@ func GetUserURLs(us Getter, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, err = w.Write(result)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
