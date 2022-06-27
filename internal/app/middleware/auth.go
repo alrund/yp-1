@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/alrund/yp-1/internal/app/encryption"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,11 @@ func Auth(next http.Handler) http.Handler {
 
 		if userID == "" {
 			userID = uuid.New().String()
-			AddCookie(userID, w)
+			err = AddCookie(userID, w)
+			if err != nil {
+				http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
+				return
+			}
 		}
 
 		ctx := context.WithValue(r.Context(), UserIDContextKey, userID)
@@ -31,14 +36,21 @@ func Auth(next http.Handler) http.Handler {
 	})
 }
 
-func AddCookie(userID string, w http.ResponseWriter) {
+func AddCookie(userID string, w http.ResponseWriter) error {
+	encrypted, err := encryption.Encrypt(userID)
+	if err != nil {
+		return err
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     string(UserIDContextKey),
-		Value:    userID,
+		Value:    encrypted,
 		Path:     "/",
 		Expires:  time.Now().Add(365 * 24 * time.Hour),
 		HttpOnly: true,
 	})
+
+	return nil
 }
 
 func GetCookie(r *http.Request) (string, error) {
@@ -47,5 +59,14 @@ func GetCookie(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	return userCookie.Value, nil
+	if userCookie.Value == "" {
+		return "", nil
+	}
+
+	userID, err := encryption.Decrypt(userCookie.Value)
+	if err != nil {
+		return "", err
+	}
+
+	return userID, nil
 }
