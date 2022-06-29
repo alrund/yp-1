@@ -10,6 +10,7 @@ type Config struct {
 	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	DatabaseDsn     string `env:"DATABASE_DSN" envDefault:"postgres://dev:dev@localhost:5432/dev"`
 }
 
 func GetConfig() *Config {

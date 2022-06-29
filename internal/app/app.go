@@ -25,6 +25,10 @@ type URLShortener struct {
 	TokenGenerator tkn.Generator
 }
 
+func (us *URLShortener) GetConfig() *config.Config {
+	return us.Config
+}
+
 func (us *URLShortener) GetServerAddress() string {
 	return us.Config.ServerAddress
 }
