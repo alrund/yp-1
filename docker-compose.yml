@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: yp-postgres
+    image: postgres:14
+    command: ["postgres", "-c", "log_statement=all"]
+    shm_size: 512mb
+    volumes:
+      - pg_volume:/var/lib/postgresql/data
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: dev
+
+volumes:
+  pg_volume:
