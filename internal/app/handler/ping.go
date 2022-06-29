@@ -3,11 +3,11 @@ package handler
 import (
 	"context"
 	"database/sql"
-	"github.com/alrund/yp-1/internal/app/config"
 	"net/http"
 	"time"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/alrund/yp-1/internal/app/config"
+	_ "github.com/jackc/pgx/v4/stdlib" // pgx
 )
 
 type Configurator interface {
