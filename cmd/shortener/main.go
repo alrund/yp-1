@@ -23,10 +23,16 @@ func main() {
 	flag.StringVar(&cfg.DatabaseDsn, "d", cfg.DatabaseDsn, "Строка с адресом подключения к БД")
 	flag.Parse()
 
+	var err error
 	var strg app.Storage = storage.NewMap()
 	if cfg.FileStoragePath != "" {
-		var err error
 		strg, err = storage.NewFile(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if cfg.DatabaseDsn != "" {
+		strg, err = storage.NewDB(cfg.DatabaseDsn)
 		if err != nil {
 			log.Fatal(err)
 		}
