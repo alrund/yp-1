@@ -2,18 +2,19 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"io"
 	"net/http"
+
+	"github.com/alrund/yp-1/internal/app/middleware"
 )
 
 type JSONBatchRequestRow struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
 type JSONBatchResponseRow struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 
@@ -62,7 +63,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		}
 
 		jsonResponse = append(jsonResponse, JSONBatchResponseRow{
-			CorrelationId: jsonRequest.CorrelationId,
+			CorrelationID: jsonRequest.CorrelationID,
 			ShortURL:      us.GetBaseURL() + token.Value,
 		})
 	}
