@@ -1,7 +1,9 @@
 package generator
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"log"
+	"math/big"
 	"strings"
 )
 
@@ -17,15 +19,22 @@ func NewSimple() *Simple {
 }
 
 func (st *Simple) Generate() string {
-	rs := st.randomString(Length)
+	rs, err := st.randomString(Length)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return rs
 }
 
-func (st *Simple) randomString(n int) string {
+func (st *Simple) randomString(n int) (string, error) {
 	sb := strings.Builder{}
 	sb.Grow(n)
 	for i := 0; i < n; i++ {
-		sb.WriteByte(charset[rand.Intn(len(charset))])
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		sb.WriteByte(charset[num.Int64()])
 	}
-	return sb.String()
+	return sb.String(), nil
 }
