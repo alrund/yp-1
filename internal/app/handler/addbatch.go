@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -58,12 +57,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	jsonResponse := make([]JSONBatchResponseRow, 0)
 	for _, jsonRequest := range jsonRequests {
 		token, err := us.Add(userID, jsonRequest.OriginalURL)
-		fmt.Println(userID)
-		fmt.Println(jsonRequest.OriginalURL)
-
 		if err != nil {
-			fmt.Println(err.Error())
-
 			http.Error(w, err.Error(), 500)
 			return
 		}
