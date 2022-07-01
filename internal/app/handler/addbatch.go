@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-
-	"github.com/alrund/yp-1/internal/app/middleware"
 )
 
 type JSONBatchRequestRow struct {
@@ -34,12 +32,12 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contextUserID := r.Context().Value(middleware.UserIDContextKey)
-	userID, ok := contextUserID.(string)
-	if !ok {
-		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
-		return
-	}
+	//contextUserID := r.Context().Value(middleware.UserIDContextKey)
+	//userID, ok := contextUserID.(string)
+	//if !ok {
+	//	http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
+	//	return
+	//}
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -56,7 +54,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse := make([]JSONBatchResponseRow, 0)
 	for _, jsonRequest := range jsonRequests {
-		token, err := us.Add(userID, jsonRequest.OriginalURL)
+		token, err := us.Add(jsonRequest.CorrelationID, jsonRequest.OriginalURL)
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
