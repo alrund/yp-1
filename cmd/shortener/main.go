@@ -54,6 +54,10 @@ func main() {
 		handler.AddJSON(us, w, r)
 	}).Methods(http.MethodPost)
 
+	r.HandleFunc("/api/shorten/batch", func(w http.ResponseWriter, r *http.Request) {
+		handler.AddBatchJSON(us, w, r)
+	}).Methods(http.MethodPost)
+
 	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		handler.Ping(us, w, r)
 	}).Methods(http.MethodGet)
