@@ -43,7 +43,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotImplemented)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
@@ -58,7 +58,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	for _, jsonRequest := range jsonRequests {
 		token, err := us.Add(userID, jsonRequest.OriginalURL)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			http.Error(w, err.Error(), 500)
 			return
 		}
 
@@ -70,7 +70,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	result, err := json.Marshal(jsonResponse)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
@@ -78,7 +78,7 @@ func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(result)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusGatewayTimeout)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 }
