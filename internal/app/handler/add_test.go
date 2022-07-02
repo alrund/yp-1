@@ -21,16 +21,13 @@ func (st *TestGenerator) Generate() string {
 	return "qwerty"
 }
 
-var us1 = &app.URLShortener{
-	Config: &config.Config{
+func TestAdd(t *testing.T) {
+	testConfig := &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080/",
-	},
-	Storage:        storage.NewMap(),
-	TokenGenerator: new(TestGenerator),
-}
+	}
+	testTokenGenerator := new(TestGenerator)
 
-func TestAdd(t *testing.T) {
 	type want struct {
 		code        int
 		response    string
@@ -55,7 +52,7 @@ func TestAdd(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    us1.GetBaseURL() + us1.TokenGenerator.Generate(),
+				response:    testConfig.BaseURL + testTokenGenerator.Generate(),
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -88,10 +85,17 @@ func TestAdd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			var us = &app.URLShortener{
+				Config:         testConfig,
+				Storage:        storage.NewMap(),
+				TokenGenerator: testTokenGenerator,
+			}
+
 			request := getNewRequestWithUserID(tt.request.method, tt.request.target, tt.request.userID, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Add(us1, w, r)
+				Add(us, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()
@@ -111,6 +115,12 @@ func TestAdd(t *testing.T) {
 }
 
 func TestAddJSON(t *testing.T) {
+	testConfig := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
+	testTokenGenerator := new(TestGenerator)
+
 	type want struct {
 		code        int
 		response    string
@@ -139,7 +149,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + us1.GetBaseURL() + us1.TokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
@@ -154,7 +164,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + us1.GetBaseURL() + us1.TokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
@@ -201,6 +211,11 @@ func TestAddJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			var us = &app.URLShortener{
+				Config:         testConfig,
+				Storage:        storage.NewMap(),
+				TokenGenerator: testTokenGenerator,
+			}
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -210,7 +225,7 @@ func TestAddJSON(t *testing.T) {
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddJSON(us1, w, r)
+				AddJSON(us, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()
