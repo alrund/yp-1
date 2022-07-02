@@ -2,11 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"mime"
 	"net/http"
 
 	"github.com/alrund/yp-1/internal/app/middleware"
+	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
@@ -24,6 +26,8 @@ type JSONResponse struct {
 }
 
 func Add(us Adder, w http.ResponseWriter, r *http.Request) {
+	httpCode := http.StatusCreated
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -49,12 +53,15 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	token, err := us.Add(userID, string(b))
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+		if !errors.Is(err, storage.ErrURLAlreadyExists) {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		httpCode = http.StatusConflict
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(httpCode)
 	_, err = w.Write([]byte(us.GetBaseURL() + token.Value))
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -63,6 +70,8 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 }
 
 func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
+	httpCode := http.StatusCreated
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -100,8 +109,11 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	token, err := us.Add(userID, jsonRequest.URL)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
+		if !errors.Is(err, storage.ErrURLAlreadyExists) {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		httpCode = http.StatusConflict
 	}
 
 	jsonResponse := JSONResponse{Result: us.GetBaseURL() + token.Value}
@@ -112,7 +124,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(httpCode)
 	_, err = w.Write(result)
 	if err != nil {
 		http.Error(w, err.Error(), 500)

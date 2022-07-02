@@ -52,6 +52,11 @@ func (d *DB) migrations() error {
 		return err
 	}
 
+	err = migrations.UpUniqueURLIndex(tx)
+	if err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
