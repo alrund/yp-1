@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,110 +9,11 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-type TestGenerator struct{}
-
-func (st *TestGenerator) Generate() string {
-	return "qwerty"
-}
-
-func TestAdd(t *testing.T) {
-	testConfig := &config.Config{
-		ServerAddress: "localhost:8080",
-		BaseURL:       "http://localhost:8080/",
-	}
-	testTokenGenerator := new(TestGenerator)
-
-	type want struct {
-		code        int
-		response    string
-		contentType string
-	}
-	type request struct {
-		method string
-		target string
-		userID string
-	}
-	tests := []struct {
-		name    string
-		request request
-		want    want
-	}{
-		{
-			name: "success",
-			request: request{
-				method: http.MethodPost,
-				target: "/",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusCreated,
-				response:    testConfig.BaseURL + testTokenGenerator.Generate(),
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect method",
-			request: request{
-				method: http.MethodGet,
-				target: "/",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    "Only POST requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect path",
-			request: request{
-				method: http.MethodPost,
-				target: "/incorrect",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusBadRequest,
-				response:    "400 Bad Request.\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			us := &app.URLShortener{
-				Config:         testConfig,
-				Storage:        storage.NewMap(),
-				TokenGenerator: testTokenGenerator,
-			}
-
-			request := getNewRequestWithUserID(tt.request.method, tt.request.target, tt.request.userID, nil)
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Add(us, w, r)
-			})
-			h.ServeHTTP(w, request)
-			res := w.Result()
-
-			assert.Equal(t, tt.want.code, res.StatusCode)
-
-			defer res.Body.Close()
-			resBody, err := io.ReadAll(res.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			assert.Equalf(t, tt.want.response, string(resBody), w.Body.String())
-			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
-		})
-	}
-}
-
-func TestAddJSON(t *testing.T) {
+func TestAddBatchJSONSuccess(t *testing.T) {
 	testConfig := &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080/",
@@ -140,40 +40,140 @@ func TestAddJSON(t *testing.T) {
 		{
 			name: "success",
 			request: request{
-				method:      http.MethodPost,
-				target:      "/api/shorten",
-				userID:      "XXX-YYY-ZZZ",
-				body:        `{"url": "https://ya.ru"}`,
+				method: http.MethodPost,
+				target: "/api/shorten/batch",
+				userID: "XXX-YYY-ZZZ",
+				body: `[
+					{
+						"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d",
+						"original_url":"http://nxcfxrjohfr8.ru/aczlc5fcm5/tnypmcukjfip"
+					},
+					{
+						"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+						"original_url":"http://rknawuufoxwpc.net/ejpjlw/qnulybd8720"
+					}
+				]`,
 				contentType: "application/json; charset=utf-8",
 			},
 			want: want{
-				code:        http.StatusCreated,
-				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
+				code: http.StatusCreated,
+				response: `[{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
+					testConfig.BaseURL +
+					testTokenGenerator.Generate() +
+					`"},{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
+					testConfig.BaseURL +
+					testTokenGenerator.Generate() +
+					`"}]`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
 		{
 			name: "success with content-type without charset",
 			request: request{
-				method:      http.MethodPost,
-				target:      "/api/shorten",
-				userID:      "XXX-YYY-ZZZ",
-				body:        `{"url": "https://ya.ru"}`,
+				method: http.MethodPost,
+				target: "/api/shorten/batch",
+				userID: "XXX-YYY-ZZZ",
+				body: `[
+					{
+						"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d",
+						"original_url":"http://nxcfxrjohfr8.ru/aczlc5fcm5/tnypmcukjfip"
+					},
+					{
+						"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+						"original_url":"http://rknawuufoxwpc.net/ejpjlw/qnulybd8720"
+					}
+				]`,
 				contentType: "application/json",
 			},
 			want: want{
-				code:        http.StatusCreated,
-				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
+				code: http.StatusCreated,
+				response: `[{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
+					testConfig.BaseURL +
+					testTokenGenerator.Generate() +
+					`"},{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
+					testConfig.BaseURL +
+					testTokenGenerator.Generate() +
+					`"}]`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config:         testConfig,
+				Storage:        storage.NewMap(),
+				TokenGenerator: testTokenGenerator,
+			}
+			request := getNewRequestWithUserID(
+				tt.request.method,
+				tt.request.target,
+				tt.request.userID,
+				strings.NewReader(tt.request.body),
+			)
+			request.Header.Set("Content-type", tt.request.contentType)
+			w := httptest.NewRecorder()
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				AddBatchJSON(us, w, r)
+			})
+			h.ServeHTTP(w, request)
+			res := w.Result()
+
+			assert.Equal(t, tt.want.code, res.StatusCode)
+
+			defer res.Body.Close()
+			resBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equalf(t, tt.want.response, string(resBody), w.Body.String())
+			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
+		})
+	}
+}
+
+func TestAddBatchJSONFail(t *testing.T) {
+	testConfig := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
+	testTokenGenerator := new(TestGenerator)
+
+	type want struct {
+		code        int
+		response    string
+		contentType string
+	}
+	type request struct {
+		method      string
+		target      string
+		userID      string
+		body        string
+		contentType string
+	}
+	tests := []struct {
+		name    string
+		request request
+		want    want
+	}{
 		{
 			name: "incorrect content-type",
 			request: request{
-				method:      http.MethodPost,
-				target:      "/api/shorten",
-				userID:      "XXX-YYY-ZZZ",
-				body:        `{"url": "https://ya.ru"}`,
+				method: http.MethodPost,
+				target: "/api/shorten/batch",
+				userID: "XXX-YYY-ZZZ",
+				body: `[
+					{
+						"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d",
+						"original_url":"http://nxcfxrjohfr8.ru/aczlc5fcm5/tnypmcukjfip"
+					},
+					{
+						"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+						"original_url":"http://rknawuufoxwpc.net/ejpjlw/qnulybd8720"
+					}
+				]`,
 				contentType: "text/plain; charset=utf-8",
 			},
 			want: want{
@@ -186,7 +186,7 @@ func TestAddJSON(t *testing.T) {
 			name: "incorrect method",
 			request: request{
 				method: http.MethodGet,
-				target: "/api/shorten",
+				target: "/api/shorten/batch",
 				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
@@ -208,6 +208,7 @@ func TestAddJSON(t *testing.T) {
 			},
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			us := &app.URLShortener{
@@ -224,7 +225,7 @@ func TestAddJSON(t *testing.T) {
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddJSON(us, w, r)
+				AddBatchJSON(us, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()
@@ -241,11 +242,4 @@ func TestAddJSON(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
-}
-
-func getNewRequestWithUserID(method, target, userID string, body io.Reader) *http.Request {
-	request := httptest.NewRequest(method, target, body)
-	ctx := request.Context()
-	ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
-	return request.WithContext(ctx)
 }
