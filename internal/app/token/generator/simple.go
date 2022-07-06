@@ -2,7 +2,6 @@ package generator
 
 import (
 	"crypto/rand"
-	"log"
 	"math/big"
 	"strings"
 )
@@ -18,12 +17,12 @@ func NewSimple() *Simple {
 	return &Simple{}
 }
 
-func (st *Simple) Generate() string {
+func (st *Simple) Generate() (string, error) {
 	rs, err := st.randomString(Length)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return rs
+	return rs, nil
 }
 
 func (st *Simple) randomString(n int) (string, error) {

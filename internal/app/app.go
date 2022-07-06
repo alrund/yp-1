@@ -55,7 +55,10 @@ func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 		}
 		return token, storage.ErrURLAlreadyExists
 	}
-	token := tkn.NewToken(us.TokenGenerator)
+	token, err := tkn.NewToken(us.TokenGenerator)
+	if err != nil {
+		return nil, err
+	}
 	err = us.Set(userID, url, token)
 	if err != nil {
 		return nil, err

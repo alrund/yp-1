@@ -17,8 +17,8 @@ import (
 
 type TestGenerator struct{}
 
-func (st *TestGenerator) Generate() string {
-	return "qwerty"
+func (st *TestGenerator) Generate() (string, error) {
+	return "qwerty", nil
 }
 
 func TestAdd(t *testing.T) {
@@ -27,6 +27,7 @@ func TestAdd(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
 
 	type want struct {
 		code        int
@@ -52,7 +53,7 @@ func TestAdd(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    testConfig.BaseURL + testTokenGenerator.Generate(),
+				response:    testConfig.BaseURL + testToken,
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
@@ -119,6 +120,7 @@ func TestAddJSON(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
 
 	type want struct {
 		code        int
@@ -148,7 +150,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + testConfig.BaseURL + testToken + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},
@@ -163,7 +165,7 @@ func TestAddJSON(t *testing.T) {
 			},
 			want: want{
 				code:        http.StatusCreated,
-				response:    `{"result":"` + testConfig.BaseURL + testTokenGenerator.Generate() + `"}`,
+				response:    `{"result":"` + testConfig.BaseURL + testToken + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 		},

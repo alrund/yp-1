@@ -19,6 +19,7 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
 
 	type want struct {
 		code        int
@@ -59,10 +60,10 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 				code: http.StatusCreated,
 				response: `[{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
 					testConfig.BaseURL +
-					testTokenGenerator.Generate() +
+					testToken +
 					`"},{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
 					testConfig.BaseURL +
-					testTokenGenerator.Generate() +
+					testToken +
 					`"}]`,
 				contentType: "application/json; charset=utf-8",
 			},
@@ -89,10 +90,10 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 				code: http.StatusCreated,
 				response: `[{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
 					testConfig.BaseURL +
-					testTokenGenerator.Generate() +
+					testToken +
 					`"},{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
 					testConfig.BaseURL +
-					testTokenGenerator.Generate() +
+					testToken +
 					`"}]`,
 				contentType: "application/json; charset=utf-8",
 			},
