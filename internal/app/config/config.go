@@ -11,6 +11,7 @@ type Config struct {
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	DatabaseDsn     string `env:"DATABASE_DSN"` // postgres://dev:dev@localhost:5432/dev
+	CipherPass      string `env:"CIPHER_PASSWORD" envDefault:"J53RPX6"`
 }
 
 func GetConfig() *Config {

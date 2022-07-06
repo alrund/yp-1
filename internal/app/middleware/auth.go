@@ -14,30 +14,32 @@ type ContextKey string
 
 const UserIDContextKey ContextKey = "userID"
 
-func Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := GetCookie(r)
-		if err != nil && !errors.Is(err, http.ErrNoCookie) {
-			http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
-			return
-		}
-
-		if userID == "" {
-			userID = uuid.New().String()
-			err = AddCookie(userID, w)
-			if err != nil {
+func Auth(enc *encryption.Encryption) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userID, err := GetCookie(r, enc)
+			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
 				return
 			}
-		}
 
-		ctx := context.WithValue(r.Context(), UserIDContextKey, userID)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+			if userID == "" {
+				userID = uuid.New().String()
+				err = AddCookie(userID, w, enc)
+				if err != nil {
+					http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)
+					return
+				}
+			}
+
+			ctx := context.WithValue(r.Context(), UserIDContextKey, userID)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
-func AddCookie(userID string, w http.ResponseWriter) error {
-	encrypted, err := encryption.Encrypt(userID)
+func AddCookie(userID string, w http.ResponseWriter, enc *encryption.Encryption) error {
+	encrypted, err := enc.Encrypt(userID)
 	if err != nil {
 		return err
 	}
@@ -53,7 +55,7 @@ func AddCookie(userID string, w http.ResponseWriter) error {
 	return nil
 }
 
-func GetCookie(r *http.Request) (string, error) {
+func GetCookie(r *http.Request, enc *encryption.Encryption) (string, error) {
 	userCookie, err := r.Cookie(string(UserIDContextKey))
 	if err != nil {
 		return "", err
@@ -63,7 +65,7 @@ func GetCookie(r *http.Request) (string, error) {
 		return "", nil
 	}
 
-	userID, err := encryption.Decrypt(userCookie.Value)
+	userID, err := enc.Decrypt(userCookie.Value)
 	if err != nil {
 		return "", err
 	}

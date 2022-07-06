@@ -7,10 +7,16 @@ import (
 	"encoding/hex"
 )
 
-const CipherPass = "J53RPX6"
+type Encryption struct {
+	CipherPass string
+}
 
-func Encrypt(data string) (string, error) {
-	aesgcm, nonce, err := getAesgcm()
+func NewEncryption(cipherPass string) *Encryption {
+	return &Encryption{CipherPass: cipherPass}
+}
+
+func (e *Encryption) Encrypt(data string) (string, error) {
+	aesgcm, nonce, err := e.getAesgcm()
 	if err != nil {
 		return "", err
 	}
@@ -18,8 +24,8 @@ func Encrypt(data string) (string, error) {
 	return hex.EncodeToString(aesgcm.Seal(nil, nonce, []byte(data), nil)), nil
 }
 
-func Decrypt(encrypted string) (string, error) {
-	aesgcm, nonce, err := getAesgcm()
+func (e *Encryption) Decrypt(encrypted string) (string, error) {
+	aesgcm, nonce, err := e.getAesgcm()
 	if err != nil {
 		return "", err
 	}
@@ -37,8 +43,8 @@ func Decrypt(encrypted string) (string, error) {
 	return string(decrypted), nil
 }
 
-func getAesgcm() (cipher.AEAD, []byte, error) {
-	key := sha256.Sum256([]byte(CipherPass))
+func (e *Encryption) getAesgcm() (cipher.AEAD, []byte, error) {
+	key := sha256.Sum256([]byte(e.CipherPass))
 
 	aesblock, err := aes.NewCipher(key[:])
 	if err != nil {

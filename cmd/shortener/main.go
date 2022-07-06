@@ -7,6 +7,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/encryption"
 	"github.com/alrund/yp-1/internal/app/handler"
 	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
@@ -72,7 +73,7 @@ func main() {
 
 	r.Use(middleware.Compress)
 	r.Use(middleware.Decompress)
-	r.Use(middleware.Auth)
+	r.Use(middleware.Auth(encryption.NewEncryption(cfg.CipherPass)))
 
 	log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
 }

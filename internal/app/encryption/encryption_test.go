@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var enc = NewEncryption("J53RPX6")
+
 func TestEncrypt(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -22,7 +24,7 @@ func TestEncrypt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ecrypted, err := Encrypt(tt.data)
+			ecrypted, err := enc.Encrypt(tt.data)
 			assert.NotEqual(t, ecrypted, tt.data)
 			assert.Equal(t, tt.want, ecrypted)
 
@@ -49,7 +51,7 @@ func TestDecrypt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			decrypted, err := Decrypt(tt.data)
+			decrypted, err := enc.Decrypt(tt.data)
 			assert.NotEqual(t, decrypted, tt.data)
 			assert.Equal(t, tt.want, decrypted)
 
