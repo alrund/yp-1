@@ -9,6 +9,7 @@ import (
 	"github.com/alrund/yp-1/internal/app/migrations"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/google/uuid"
+	_ "github.com/jackc/pgx/v4/stdlib" // pgx
 )
 
 type DB struct {
