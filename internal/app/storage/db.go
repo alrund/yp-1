@@ -12,8 +12,7 @@ import (
 )
 
 type DB struct {
-	db  *sql.DB
-	Dsn string
+	db *sql.DB
 }
 
 func NewDB(dsn string) (*DB, error) {
@@ -23,8 +22,7 @@ func NewDB(dsn string) (*DB, error) {
 	}
 
 	newDB := &DB{
-		db:  db,
-		Dsn: dsn,
+		db: db,
 	}
 
 	err = newDB.migrations()
