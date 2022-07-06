@@ -41,6 +41,7 @@ func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)                   {
 func (st *Storage) GetURLsByUserID(string, string) ([]storage.URLpairs, error) { return nil, nil }
 func (st *Storage) HasURL(string) (bool, error)                                { return true, nil }
 func (st *Storage) Set(string, string, *tkn.Token) error                       { return nil }
+func (st *Storage) Ping(ctx context.Context) error                             { return nil }
 
 var us2 = &app.URLShortener{
 	Config: &config.Config{

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"sync"
 
 	tkn "github.com/alrund/yp-1/internal/app/token"
@@ -121,4 +122,8 @@ func (s *Map) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
 	}
 
 	return nil, ErrURLNotFound
+}
+
+func (s *Map) Ping(ctx context.Context) error {
+	return nil
 }

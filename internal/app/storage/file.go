@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -209,4 +210,8 @@ func (s *File) restoreState() (map[string]composite, error) {
 	}
 
 	return state, nil
+}
+
+func (s *File) Ping(ctx context.Context) error {
+	return nil
 }

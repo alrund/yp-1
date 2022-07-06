@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"strings"
 
 	"github.com/alrund/yp-1/internal/app/config"
@@ -17,6 +18,7 @@ type Storage interface {
 	GetURLsByUserID(userID, baseURL string) ([]storage.URLpairs, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
+	Ping(ctx context.Context) error
 }
 
 type URLShortener struct {

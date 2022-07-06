@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -225,4 +226,11 @@ func (d *DB) HasToken(tokenValue string) (bool, error) {
 	}
 
 	return t != "", nil
+}
+
+func (d *DB) Ping(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	return d.db.PingContext(ctx)
 }
