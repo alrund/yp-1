@@ -183,31 +183,6 @@ func TestAddBatchJSONFail(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
-		{
-			name: "incorrect method",
-			request: request{
-				method: http.MethodGet,
-				target: "/api/shorten/batch",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    "Only POST requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect path",
-			request: request{
-				method: http.MethodPost,
-				target: "/incorrect",
-			},
-			want: want{
-				code:        http.StatusBadRequest,
-				response:    "400 Bad Request.\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
 	}
 
 	for _, tt := range tests {

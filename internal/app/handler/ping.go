@@ -15,11 +15,6 @@ type Configurator interface {
 }
 
 func Ping(us Configurator, w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
 	db, err := sql.Open("pgx", us.GetConfig().DatabaseDsn)
 	if err != nil {
 		http.Error(w, "500 Internal Server Error.", http.StatusInternalServerError)

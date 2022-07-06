@@ -19,16 +19,6 @@ type JSONBatchResponseRow struct {
 }
 
 func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if r.URL.Path != "/api/shorten/batch" {
-		http.Error(w, "400 Bad Request.", http.StatusBadRequest)
-		return
-	}
-
 	if !hasContentType(r, "application/json") {
 		http.Error(w, "415 Unsupported Media Type.", http.StatusUnsupportedMediaType)
 		return

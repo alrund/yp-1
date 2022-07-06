@@ -28,16 +28,6 @@ type JSONResponse struct {
 func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 	httpCode := http.StatusCreated
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if r.URL.Path != "/" {
-		http.Error(w, "400 Bad Request.", http.StatusBadRequest)
-		return
-	}
-
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)
 	if !ok {
@@ -71,16 +61,6 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 
 func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	httpCode := http.StatusCreated
-
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if r.URL.Path != "/api/shorten" {
-		http.Error(w, "400 Bad Request.", http.StatusBadRequest)
-		return
-	}
 
 	if !hasContentType(r, "application/json") {
 		http.Error(w, "415 Unsupported Media Type.", http.StatusUnsupportedMediaType)

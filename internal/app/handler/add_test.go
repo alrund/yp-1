@@ -57,32 +57,6 @@ func TestAdd(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
-		{
-			name: "incorrect method",
-			request: request{
-				method: http.MethodGet,
-				target: "/",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    "Only POST requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect path",
-			request: request{
-				method: http.MethodPost,
-				target: "/incorrect",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusBadRequest,
-				response:    "400 Bad Request.\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -181,31 +155,6 @@ func TestAddJSON(t *testing.T) {
 			want: want{
 				code:        http.StatusUnsupportedMediaType,
 				response:    "415 Unsupported Media Type.\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect method",
-			request: request{
-				method: http.MethodGet,
-				target: "/api/shorten",
-				userID: "XXX-YYY-ZZZ",
-			},
-			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    "Only POST requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect path",
-			request: request{
-				method: http.MethodPost,
-				target: "/incorrect",
-			},
-			want: want{
-				code:        http.StatusBadRequest,
-				response:    "400 Bad Request.\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},

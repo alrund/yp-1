@@ -16,11 +16,6 @@ type Getter interface {
 }
 
 func Get(us Getter, w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
 	id := r.URL.Path[1:]
 	if id == "" {
 		http.Error(w, "400 Bad Request.", http.StatusBadRequest)
@@ -52,11 +47,6 @@ func Get(us Getter, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserURLs(us Getter, w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)
 	if !ok {
