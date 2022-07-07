@@ -211,7 +211,7 @@ func (d *DB) GetURL(tokenValue string) (string, error) {
 	return url, nil
 }
 
-func (d *DB) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
+func (d *DB) GetURLsByUserID(userID string) ([]URLpairs, error) {
 	rows, err := d.db.Query(
 		"SELECT url, token FROM urls WHERE user_id = $1", userID,
 	)
@@ -235,7 +235,7 @@ func (d *DB) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
 
 		pairs = append(pairs, URLpairs{
 			OriginalURL: url,
-			ShortURL:    baseURL + token,
+			ShortURL:    token,
 		})
 	}
 

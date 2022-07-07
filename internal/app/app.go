@@ -17,7 +17,7 @@ type Storage interface {
 	GetTokenByURL(url string) (*tkn.Token, error)
 	GetTokensByUserID(userID string) ([]*tkn.Token, error)
 	GetURL(tokenValue string) (string, error)
-	GetURLsByUserID(userID, baseURL string) ([]storage.URLpairs, error)
+	GetURLsByUserID(userID string) ([]storage.URLpairs, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
 	Ping(ctx context.Context) error
@@ -124,5 +124,15 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 }
 
 func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLpairs, error) {
-	return us.GetURLsByUserID(userID, us.GetBaseURL())
+	baseURL := us.GetBaseURL()
+	URLPairs, err := us.GetURLsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(URLPairs); i++ {
+		URLPairs[i].ShortURL = baseURL + URLPairs[i].ShortURL
+	}
+
+	return URLPairs, nil
 }

@@ -113,7 +113,7 @@ func (s *Map) HasToken(tokenValue string) (bool, error) {
 	return true, nil
 }
 
-func (s *Map) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
+func (s *Map) GetURLsByUserID(userID string) ([]URLpairs, error) {
 	tokens, err := s.GetTokensByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func (s *Map) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
 		if err != nil {
 			return nil, err
 		}
-		urls = append(urls, URLpairs{ShortURL: baseURL + token.Value, OriginalURL: originalURL})
+		urls = append(urls, URLpairs{ShortURL: token.Value, OriginalURL: originalURL})
 	}
 
 	if len(urls) > 0 {

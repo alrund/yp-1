@@ -38,7 +38,7 @@ func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 func (st *Storage) GetURL(string) (string, error)                                 { return "https://ya.ru", nil }
 func (st *Storage) GetTokensByUserID(string) ([]*tkn.Token, error)                { return nil, nil }
 func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)                      { return nil, nil }
-func (st *Storage) GetURLsByUserID(string, string) ([]storage.URLpairs, error)    { return nil, nil }
+func (st *Storage) GetURLsByUserID(string) ([]storage.URLpairs, error)            { return nil, nil }
 func (st *Storage) HasURL(string) (bool, error)                                   { return true, nil }
 func (st *Storage) Set(string, string, *tkn.Token) error                          { return nil }
 func (st *Storage) SetBatch(userID string, url2token map[string]*tkn.Token) error { return nil }
