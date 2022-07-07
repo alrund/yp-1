@@ -87,6 +87,41 @@ func (d *DB) Set(userID, url string, token *tkn.Token) error {
 	return tx.Commit()
 }
 
+func (d *DB) SetBatch(userID string, url2token map[string]*tkn.Token) error {
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	tokensStmt, err := d.db.Prepare("INSERT INTO tokens(token, expire) VALUES($1, $2)")
+	if err != nil {
+		return err
+	}
+	defer tokensStmt.Close()
+
+	urlsStmt, err := d.db.Prepare("INSERT INTO urls(id, url, token, user_id) VALUES($1, $2, $3, $4)")
+	if err != nil {
+		return err
+	}
+	defer urlsStmt.Close()
+
+	for url, token := range url2token {
+		_, err = tokensStmt.Exec(token.Value, token.Expire.Unix())
+		if err != nil {
+			return err
+		}
+
+		_, err = urlsStmt.Exec(uuid.NewString(), url, token.Value, userID)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
 func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 	var value string
 	var timestamp int64
@@ -94,6 +129,9 @@ func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 		"SELECT token, expire FROM tokens WHERE token = $1", tokenValue,
 	).Scan(&value, &timestamp)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTokenNotFound
+		}
 		return nil, err
 	}
 
@@ -110,6 +148,9 @@ func (d *DB) GetTokenByURL(url string) (*tkn.Token, error) {
 		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.url = $1", url,
 	).Scan(&value, &timestamp)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTokenNotFound
+		}
 		return nil, err
 	}
 
@@ -124,6 +165,9 @@ func (d *DB) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.user_id = $1", userID,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrTokenNotFound
+		}
 		return nil, err
 	}
 
@@ -158,6 +202,9 @@ func (d *DB) GetURL(tokenValue string) (string, error) {
 		"SELECT url FROM urls WHERE token = $1", tokenValue,
 	).Scan(&url)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrURLNotFound
+		}
 		return "", err
 	}
 
@@ -169,6 +216,9 @@ func (d *DB) GetURLsByUserID(userID, baseURL string) ([]URLpairs, error) {
 		"SELECT url, token FROM urls WHERE user_id = $1", userID,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrURLNotFound
+		}
 		return nil, err
 	}
 

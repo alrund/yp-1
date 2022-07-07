@@ -35,6 +35,17 @@ func (s *Map) Set(userID, url string, token *tkn.Token) error {
 	return nil
 }
 
+func (s *Map) SetBatch(userID string, url2token map[string]*tkn.Token) error {
+	for url, token := range url2token {
+		err := s.Set(userID, url, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *Map) GetToken(tokenValue string) (*tkn.Token, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()

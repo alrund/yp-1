@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/alrund/yp-1/internal/app/config"
@@ -11,6 +12,7 @@ import (
 
 type Storage interface {
 	Set(userID, url string, token *tkn.Token) error
+	SetBatch(userID string, url2token map[string]*tkn.Token) error
 	GetToken(tokenValue string) (*tkn.Token, error)
 	GetTokenByURL(url string) (*tkn.Token, error)
 	GetTokensByUserID(userID string) ([]*tkn.Token, error)
@@ -66,6 +68,42 @@ func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 		return nil, err
 	}
 	return token, nil
+}
+
+func (us *URLShortener) AddBatch(userID string, urls []string) (map[string]*tkn.Token, error) {
+	url2token := map[string]*tkn.Token{}
+	url2newtoken := map[string]*tkn.Token{}
+	var storageErr error
+
+	for _, url := range urls {
+		token, err := us.GetTokenByURL(url)
+		if err != nil && !errors.Is(err, storage.ErrTokenNotFound) {
+			return nil, err
+		}
+		if token != nil && token.IsExpired() {
+			err = us.Set(userID, url, token.Refresh())
+			if err != nil {
+				return nil, err
+			}
+		}
+		if token != nil {
+			storageErr = storage.ErrURLAlreadyExists
+		} else {
+			token, err = tkn.NewToken(us.TokenGenerator)
+			if err != nil {
+				return nil, err
+			}
+			url2newtoken[url] = token
+		}
+		url2token[url] = token
+	}
+
+	err := us.SetBatch(userID, url2newtoken)
+	if err != nil {
+		return nil, err
+	}
+
+	return url2token, storageErr
 }
 
 func (us *URLShortener) Get(tokenValue string) (string, error) {

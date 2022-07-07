@@ -15,6 +15,7 @@ import (
 type Adder interface {
 	GetBaseURL() string
 	Add(userID, url string) (*tkn.Token, error)
+	AddBatch(userID string, urls []string) (map[string]*tkn.Token, error)
 }
 
 type JSONRequest struct {
@@ -37,14 +38,14 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	token, err := us.Add(userID, string(b))
 	if err != nil {
 		if !errors.Is(err, storage.ErrURLAlreadyExists) {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		httpCode = http.StatusConflict
@@ -54,7 +55,7 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(httpCode)
 	_, err = w.Write([]byte(us.GetBaseURL() + token.Value))
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -76,7 +77,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -90,7 +91,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	token, err := us.Add(userID, jsonRequest.URL)
 	if err != nil {
 		if !errors.Is(err, storage.ErrURLAlreadyExists) {
-			http.Error(w, err.Error(), 500)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		httpCode = http.StatusConflict
@@ -99,7 +100,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	jsonResponse := JSONResponse{Result: us.GetBaseURL() + token.Value}
 	result, err := json.Marshal(jsonResponse)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -107,7 +108,7 @@ func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(httpCode)
 	_, err = w.Write(result)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }

@@ -21,7 +21,7 @@ func NewFile(fileName string) (*File, error) {
 	}, nil
 }
 
-func (s *File) Set(userID, url string, token *tkn.Token) error {
+func (s *File) Set(userID string, url string, token *tkn.Token) error {
 	state, err := s.restoreState()
 	if err != nil {
 		return err
@@ -34,6 +34,17 @@ func (s *File) Set(userID, url string, token *tkn.Token) error {
 	state[url] = composite
 
 	return s.saveState(state)
+}
+
+func (s *File) SetBatch(userID string, url2token map[string]*tkn.Token) error {
+	for url, token := range url2token {
+		err := s.Set(userID, url, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
