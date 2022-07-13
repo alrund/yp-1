@@ -21,6 +21,7 @@ type Storage interface {
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
 	Ping(ctx context.Context) error
+	RemoveTokens(tokenValues []string, userID string) error
 }
 
 type URLShortener struct {
@@ -117,6 +118,9 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 		}
 		if token.IsExpired() {
 			return "", tkn.ErrTokenExpiredError
+		}
+		if token.Removed {
+			return "", tkn.ErrTokenRemovedError
 		}
 		return us.GetURL(tokenValue)
 	}

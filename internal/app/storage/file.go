@@ -47,6 +47,31 @@ func (s *File) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 	return nil
 }
 
+func (s *File) RemoveTokens(tokenValues []string, userID string) error {
+	state, err := s.restoreState()
+	if err != nil {
+		return err
+	}
+
+	for _, composite := range state {
+		if composite.Token == nil {
+			continue
+		}
+
+		if composite.UserID != userID {
+			continue
+		}
+
+		for _, tokenValue := range tokenValues {
+			if tokenValue == composite.Token.Value {
+				composite.Token.Removed = true
+			}
+		}
+	}
+
+	return s.saveState(state)
+}
+
 func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
 	state, err := s.restoreState()
 	if err != nil {

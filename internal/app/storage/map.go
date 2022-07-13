@@ -46,6 +46,37 @@ func (s *Map) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 	return nil
 }
 
+func (s *Map) RemoveTokens(tokenValues []string, userID string) error {
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	for _, tokenValue := range tokenValues {
+		userTokenValues, ok := s.userID2tokenValue[userID]
+		if !ok {
+			continue
+		}
+
+		has := false
+		for _, userTokenValue := range userTokenValues {
+			if userTokenValue == tokenValue {
+				has = true
+				break
+			}
+		}
+		if !has {
+			continue
+		}
+
+		composite, ok := s.tokenValue2composite[tokenValue]
+		if !ok {
+			continue
+		}
+		composite.Token.Removed = true
+	}
+
+	return nil
+}
+
 func (s *Map) GetToken(tokenValue string) (*tkn.Token, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
