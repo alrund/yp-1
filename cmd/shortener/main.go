@@ -71,6 +71,10 @@ func main() {
 		handler.GetUserURLs(us, w, r)
 	}).Methods(http.MethodGet)
 
+	r.HandleFunc("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
+		handler.DeleteURLs(us, w, r)
+	}).Methods(http.MethodDelete)
+
 	r.Use(middleware.Compress)
 	r.Use(middleware.Decompress)
 	r.Use(middleware.Auth(encryption.NewEncryption(cfg.CipherPass)))

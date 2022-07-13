@@ -21,6 +21,7 @@ type Storage interface {
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
 	Ping(ctx context.Context) error
+	RemoveTokens(tokenValues []string, userID string) error
 }
 
 type URLShortener struct {

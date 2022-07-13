@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alrund/yp-1/internal/app/migrations"
@@ -125,6 +128,35 @@ func (d *DB) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 	}
 
 	return tx.Commit()
+}
+
+func (d *DB) RemoveTokens(tokenValues []string, userID string) error {
+	num := len(tokenValues)
+
+	valPhs := ""
+	vals := make([]interface{}, 0, num)
+	for i, tokenValue := range tokenValues {
+		valPhs += "($" + strconv.Itoa(i+1) + "),"
+		vals = append(vals, tokenValue)
+	}
+	vals = append(vals, userID)
+
+	stmt, err := d.db.Prepare(fmt.Sprintf(
+		"UPDATE tokens SET removed=true FROM (VALUES %s) AS tmp (token) "+
+			"WHERE tokens.token=tmp.token AND tokens.token IN (SELECT token FROM urls WHERE user_id=$%d)",
+		strings.TrimRight(valPhs, ","), num+1),
+	)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(vals...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {

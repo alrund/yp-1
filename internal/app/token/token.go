@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
-var ErrTokenExpiredError = errors.New("the token time is up")
-var ErrTokenRemovedError = errors.New("the token has been removed")
+var (
+	ErrTokenExpiredError = errors.New("the token time is up")
+	ErrTokenRemovedError = errors.New("the token has been removed")
+)
 
 const LifeTime = 24 * time.Hour
 
