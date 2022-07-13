@@ -118,6 +118,9 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 		if token.IsExpired() {
 			return "", tkn.ErrTokenExpiredError
 		}
+		if token.Removed {
+			return "", tkn.ErrTokenRemovedError
+		}
 		return us.GetURL(tokenValue)
 	}
 	return "", storage.ErrTokenNotFound

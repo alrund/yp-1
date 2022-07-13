@@ -33,6 +33,11 @@ func Get(us Getter, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if errors.Is(err, token.ErrTokenRemovedError) {
+			http.Error(w, "410 Gone.", http.StatusGone)
+			return
+		}
+
 		http.Error(w, err.Error(), 500)
 		return
 	}
