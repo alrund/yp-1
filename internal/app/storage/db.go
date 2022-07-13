@@ -57,6 +57,11 @@ func (d *DB) migrations() error {
 		return err
 	}
 
+	err = migrations.UpAddRemovedColumn(tx)
+	if err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
