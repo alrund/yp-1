@@ -63,7 +63,7 @@ linters:
     - staticcheck
     - structcheck
     - stylecheck
-    - tagliatelle
+#    - tagliatelle
     - thelper
     - typecheck
     - unconvert

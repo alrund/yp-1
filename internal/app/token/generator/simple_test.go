@@ -8,7 +8,7 @@ import (
 
 func TestGenerate(t *testing.T) {
 	sg := &Simple{}
-	val := sg.Generate()
+	val, _ := sg.Generate()
 	assert.Len(t, val, Length)
 	for _, r := range val {
 		assert.NotContains(t, charset, r)

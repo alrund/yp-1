@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -20,13 +21,30 @@ func NewFile(fileName string) (*File, error) {
 	}, nil
 }
 
-func (s *File) Set(url string, token *tkn.Token) error {
+func (s *File) Set(userID string, url string, token *tkn.Token) error {
 	state, err := s.restoreState()
 	if err != nil {
 		return err
 	}
-	state[url] = token
+
+	composite := state[url]
+	composite.Token = token
+	composite.URL = url
+	composite.UserID = userID
+	state[url] = composite
+
 	return s.saveState(state)
+}
+
+func (s *File) SetBatch(userID string, url2token map[string]*tkn.Token) error {
+	for url, token := range url2token {
+		err := s.Set(userID, url, token)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
@@ -35,9 +53,12 @@ func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
 		return nil, err
 	}
 
-	for _, token := range state {
-		if tokenValue == token.Value {
-			return token, nil
+	for _, composite := range state {
+		if composite.Token == nil {
+			return nil, ErrTokenNotFound
+		}
+		if tokenValue == composite.Token.Value {
+			return composite.Token, nil
 		}
 	}
 
@@ -50,10 +71,30 @@ func (s *File) GetTokenByURL(url string) (*tkn.Token, error) {
 		return nil, err
 	}
 
-	for u, token := range state {
+	for u, composite := range state {
 		if u == url {
-			return token, nil
+			return composite.Token, nil
 		}
+	}
+
+	return nil, ErrTokenNotFound
+}
+
+func (s *File) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
+	state, err := s.restoreState()
+	if err != nil {
+		return nil, err
+	}
+
+	tokens := make([]*tkn.Token, 0)
+	for _, composite := range state {
+		if userID == composite.UserID {
+			tokens = append(tokens, composite.Token)
+		}
+	}
+
+	if len(tokens) > 0 {
+		return tokens, nil
 	}
 
 	return nil, ErrTokenNotFound
@@ -65,8 +106,11 @@ func (s *File) GetURL(tokenValue string) (string, error) {
 		return "", err
 	}
 
-	for url, token := range state {
-		if tokenValue == token.Value {
+	for url, composite := range state {
+		if composite.Token == nil {
+			return "", ErrTokenNotFound
+		}
+		if tokenValue == composite.Token.Value {
 			return url, nil
 		}
 	}
@@ -95,8 +139,11 @@ func (s *File) HasToken(tokenValue string) (bool, error) {
 		return false, err
 	}
 
-	for _, token := range state {
-		if tokenValue == token.Value {
+	for _, composite := range state {
+		if composite.Token == nil {
+			return false, nil
+		}
+		if tokenValue == composite.Token.Value {
 			return true, nil
 		}
 	}
@@ -104,7 +151,29 @@ func (s *File) HasToken(tokenValue string) (bool, error) {
 	return false, nil
 }
 
-func (s *File) saveState(state map[string]*tkn.Token) error {
+func (s *File) GetURLsByUserID(userID string) ([]URLpairs, error) {
+	tokens, err := s.GetTokensByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	urls := make([]URLpairs, 0)
+	for _, token := range tokens {
+		originalURL, err := s.GetURL(token.Value)
+		if err != nil {
+			return nil, err
+		}
+		urls = append(urls, URLpairs{ShortURL: token.Value, OriginalURL: originalURL})
+	}
+
+	if len(urls) > 0 {
+		return urls, nil
+	}
+
+	return nil, ErrURLNotFound
+}
+
+func (s *File) saveState(state map[string]composite) error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
 
@@ -127,11 +196,11 @@ func (s *File) saveState(state map[string]*tkn.Token) error {
 	return nil
 }
 
-func (s *File) restoreState() (map[string]*tkn.Token, error) {
+func (s *File) restoreState() (map[string]composite, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 
-	state := make(map[string]*tkn.Token)
+	state := make(map[string]composite)
 
 	if _, err := os.Stat(s.FileName); errors.Is(err, os.ErrNotExist) {
 		return state, nil
@@ -152,4 +221,8 @@ func (s *File) restoreState() (map[string]*tkn.Token, error) {
 	}
 
 	return state, nil
+}
+
+func (s *File) Ping(ctx context.Context) error {
+	return nil
 }

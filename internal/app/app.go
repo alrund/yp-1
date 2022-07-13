@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"strings"
 
 	"github.com/alrund/yp-1/internal/app/config"
@@ -9,18 +11,26 @@ import (
 )
 
 type Storage interface {
-	Set(url string, token *tkn.Token) error
+	Set(userID, url string, token *tkn.Token) error
+	SetBatch(userID string, url2token map[string]*tkn.Token) error
 	GetToken(tokenValue string) (*tkn.Token, error)
 	GetTokenByURL(url string) (*tkn.Token, error)
+	GetTokensByUserID(userID string) ([]*tkn.Token, error)
 	GetURL(tokenValue string) (string, error)
+	GetURLsByUserID(userID string) ([]storage.URLpairs, error)
 	HasURL(url string) (bool, error)
 	HasToken(tokenValue string) (bool, error)
+	Ping(ctx context.Context) error
 }
 
 type URLShortener struct {
 	Config *config.Config
 	Storage
 	TokenGenerator tkn.Generator
+}
+
+func (us *URLShortener) GetConfig() *config.Config {
+	return us.Config
 }
 
 func (us *URLShortener) GetServerAddress() string {
@@ -31,7 +41,7 @@ func (us *URLShortener) GetBaseURL() string {
 	return strings.TrimRight(us.Config.BaseURL, "/") + "/"
 }
 
-func (us *URLShortener) Add(url string) (*tkn.Token, error) {
+func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 	ok, err := us.HasURL(url)
 	if err != nil {
 		return nil, err
@@ -42,19 +52,58 @@ func (us *URLShortener) Add(url string) (*tkn.Token, error) {
 			return nil, err
 		}
 		if token.IsExpired() {
-			err = us.Set(url, token.Refresh())
+			err = us.Set(userID, url, token.Refresh())
 			if err != nil {
 				return nil, err
 			}
 		}
-		return token, nil
+		return token, storage.ErrURLAlreadyExists
 	}
-	token := tkn.NewToken(us.TokenGenerator)
-	err = us.Set(url, token)
+	token, err := tkn.NewToken(us.TokenGenerator)
+	if err != nil {
+		return nil, err
+	}
+	err = us.Set(userID, url, token)
 	if err != nil {
 		return nil, err
 	}
 	return token, nil
+}
+
+func (us *URLShortener) AddBatch(userID string, urls []string) (map[string]*tkn.Token, error) {
+	url2token := map[string]*tkn.Token{}
+	url2newtoken := map[string]*tkn.Token{}
+	var storageErr error
+
+	for _, url := range urls {
+		token, err := us.GetTokenByURL(url)
+		if err != nil && !errors.Is(err, storage.ErrTokenNotFound) {
+			return nil, err
+		}
+		if token != nil && token.IsExpired() {
+			err = us.Set(userID, url, token.Refresh())
+			if err != nil {
+				return nil, err
+			}
+		}
+		if token != nil {
+			storageErr = storage.ErrURLAlreadyExists
+		} else {
+			token, err = tkn.NewToken(us.TokenGenerator)
+			if err != nil {
+				return nil, err
+			}
+			url2newtoken[url] = token
+		}
+		url2token[url] = token
+	}
+
+	err := us.SetBatch(userID, url2newtoken)
+	if err != nil {
+		return nil, err
+	}
+
+	return url2token, storageErr
 }
 
 func (us *URLShortener) Get(tokenValue string) (string, error) {
@@ -72,4 +121,18 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 		return us.GetURL(tokenValue)
 	}
 	return "", storage.ErrTokenNotFound
+}
+
+func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLpairs, error) {
+	baseURL := us.GetBaseURL()
+	URLPairs, err := us.GetURLsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(URLPairs); i++ {
+		URLPairs[i].ShortURL = baseURL + URLPairs[i].ShortURL
+	}
+
+	return URLPairs, nil
 }

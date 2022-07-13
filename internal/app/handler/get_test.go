@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/middleware"
+	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"
@@ -32,10 +35,14 @@ func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
 	}
 	return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
 }
-func (st *Storage) GetURL(string) (string, error)            { return "https://ya.ru", nil }
-func (st *Storage) GetTokenByURL(string) (*tkn.Token, error) { return nil, nil }
-func (st *Storage) HasURL(string) (bool, error)              { return true, nil }
-func (st *Storage) Set(string, *tkn.Token) error             { return nil }
+func (st *Storage) GetURL(string) (string, error)                                 { return "https://ya.ru", nil }
+func (st *Storage) GetTokensByUserID(string) ([]*tkn.Token, error)                { return nil, nil }
+func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)                      { return nil, nil }
+func (st *Storage) GetURLsByUserID(string) ([]storage.URLpairs, error)            { return nil, nil }
+func (st *Storage) HasURL(string) (bool, error)                                   { return true, nil }
+func (st *Storage) Set(string, string, *tkn.Token) error                          { return nil }
+func (st *Storage) SetBatch(userID string, url2token map[string]*tkn.Token) error { return nil }
+func (st *Storage) Ping(ctx context.Context) error                                { return nil }
 
 var us2 = &app.URLShortener{
 	Config: &config.Config{
@@ -55,6 +62,7 @@ func TestGet(t *testing.T) {
 	type request struct {
 		method string
 		target string
+		userID string
 	}
 	tests := []struct {
 		name    string
@@ -66,6 +74,7 @@ func TestGet(t *testing.T) {
 			request: request{
 				method: http.MethodGet,
 				target: "/qwerty",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusTemporaryRedirect,
@@ -78,6 +87,7 @@ func TestGet(t *testing.T) {
 			request: request{
 				method: http.MethodGet,
 				target: "/notfound",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        http.StatusNotFound,
@@ -90,6 +100,7 @@ func TestGet(t *testing.T) {
 			request: request{
 				method: http.MethodGet,
 				target: "/expired",
+				userID: "XXX-YYY-ZZZ",
 			},
 			want: want{
 				code:        498,
@@ -97,34 +108,13 @@ func TestGet(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
-		{
-			name: "incorrect method",
-			request: request{
-				method: http.MethodPost,
-				target: "/",
-			},
-			want: want{
-				code:        http.StatusMethodNotAllowed,
-				response:    "Only GET requests are allowed!\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
-		{
-			name: "incorrect path",
-			request: request{
-				method: http.MethodGet,
-				target: "/",
-			},
-			want: want{
-				code:        http.StatusBadRequest,
-				response:    "400 Bad Request.\n",
-				contentType: "text/plain; charset=utf-8",
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
+			ctx := request.Context()
+			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
+			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Get(us2, w, r)
