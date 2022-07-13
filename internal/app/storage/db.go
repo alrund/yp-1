@@ -130,9 +130,10 @@ func (d *DB) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 	var value string
 	var timestamp int64
+	var removed bool
 	err := d.db.QueryRow(
-		"SELECT token, expire FROM tokens WHERE token = $1", tokenValue,
-	).Scan(&value, &timestamp)
+		"SELECT token, expire, removed FROM tokens WHERE token = $1", tokenValue,
+	).Scan(&value, &timestamp, &removed)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrTokenNotFound
@@ -141,17 +142,19 @@ func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 	}
 
 	return &tkn.Token{
-		Value:  value,
-		Expire: time.Unix(timestamp, 0),
+		Value:   value,
+		Expire:  time.Unix(timestamp, 0),
+		Removed: removed,
 	}, nil
 }
 
 func (d *DB) GetTokenByURL(url string) (*tkn.Token, error) {
 	var value string
 	var timestamp int64
+	var removed bool
 	err := d.db.QueryRow(
-		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.url = $1", url,
-	).Scan(&value, &timestamp)
+		"SELECT t.token, t.expire, t.removed FROM tokens t, urls u WHERE u.token = t.token AND u.url = $1", url,
+	).Scan(&value, &timestamp, &removed)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrTokenNotFound
@@ -160,14 +163,15 @@ func (d *DB) GetTokenByURL(url string) (*tkn.Token, error) {
 	}
 
 	return &tkn.Token{
-		Value:  value,
-		Expire: time.Unix(timestamp, 0),
+		Value:   value,
+		Expire:  time.Unix(timestamp, 0),
+		Removed: removed,
 	}, nil
 }
 
 func (d *DB) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	rows, err := d.db.Query(
-		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.user_id = $1", userID,
+		"SELECT t.token, t.expire, t.removed FROM tokens t, urls u WHERE u.token = t.token AND u.user_id = $1", userID,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -182,14 +186,16 @@ func (d *DB) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	for rows.Next() {
 		var value string
 		var timestamp int64
-		err = rows.Scan(&value, &timestamp)
+		var removed bool
+		err = rows.Scan(&value, &timestamp, &removed)
 		if err != nil {
 			return nil, err
 		}
 
 		tokens = append(tokens, &tkn.Token{
-			Value:  value,
-			Expire: time.Unix(timestamp, 0),
+			Value:   value,
+			Expire:  time.Unix(timestamp, 0),
+			Removed: removed,
 		})
 	}
 

@@ -6,6 +6,7 @@ import (
 )
 
 var ErrTokenExpiredError = errors.New("the token time is up")
+var ErrTokenRemovedError = errors.New("the token has been removed")
 
 const LifeTime = 24 * time.Hour
 
@@ -14,8 +15,9 @@ type Generator interface {
 }
 
 type Token struct {
-	Value  string
-	Expire time.Time
+	Value   string
+	Expire  time.Time
+	Removed bool
 }
 
 func NewToken(g Generator) (*Token, error) {
