@@ -4,6 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alrund/yp-1/internal/app/migrations"
@@ -53,6 +56,11 @@ func (d *DB) migrations() error {
 	}
 
 	err = migrations.UpUniqueURLIndex(tx)
+	if err != nil {
+		return err
+	}
+
+	err = migrations.UpAddRemovedColumn(tx)
 	if err != nil {
 		return err
 	}
@@ -122,12 +130,42 @@ func (d *DB) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 	return tx.Commit()
 }
 
+func (d *DB) RemoveTokens(tokenValues []string, userID string) error {
+	num := len(tokenValues)
+
+	valPhs := ""
+	vals := make([]interface{}, 0, num)
+	for i, tokenValue := range tokenValues {
+		valPhs += "($" + strconv.Itoa(i+1) + "),"
+		vals = append(vals, tokenValue)
+	}
+	vals = append(vals, userID)
+
+	stmt, err := d.db.Prepare(fmt.Sprintf(
+		"UPDATE tokens SET removed=true FROM (VALUES %s) AS tmp (token) "+
+			"WHERE tokens.token=tmp.token AND tokens.token IN (SELECT token FROM urls WHERE user_id=$%d)",
+		strings.TrimRight(valPhs, ","), num+1),
+	)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(vals...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 	var value string
 	var timestamp int64
+	var removed bool
 	err := d.db.QueryRow(
-		"SELECT token, expire FROM tokens WHERE token = $1", tokenValue,
-	).Scan(&value, &timestamp)
+		"SELECT token, expire, removed FROM tokens WHERE token = $1", tokenValue,
+	).Scan(&value, &timestamp, &removed)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrTokenNotFound
@@ -136,17 +174,19 @@ func (d *DB) GetToken(tokenValue string) (*tkn.Token, error) {
 	}
 
 	return &tkn.Token{
-		Value:  value,
-		Expire: time.Unix(timestamp, 0),
+		Value:   value,
+		Expire:  time.Unix(timestamp, 0),
+		Removed: removed,
 	}, nil
 }
 
 func (d *DB) GetTokenByURL(url string) (*tkn.Token, error) {
 	var value string
 	var timestamp int64
+	var removed bool
 	err := d.db.QueryRow(
-		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.url = $1", url,
-	).Scan(&value, &timestamp)
+		"SELECT t.token, t.expire, t.removed FROM tokens t, urls u WHERE u.token = t.token AND u.url = $1", url,
+	).Scan(&value, &timestamp, &removed)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrTokenNotFound
@@ -155,14 +195,15 @@ func (d *DB) GetTokenByURL(url string) (*tkn.Token, error) {
 	}
 
 	return &tkn.Token{
-		Value:  value,
-		Expire: time.Unix(timestamp, 0),
+		Value:   value,
+		Expire:  time.Unix(timestamp, 0),
+		Removed: removed,
 	}, nil
 }
 
 func (d *DB) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	rows, err := d.db.Query(
-		"SELECT t.token, t.expire FROM tokens t, urls u WHERE u.token = t.token AND u.user_id = $1", userID,
+		"SELECT t.token, t.expire, t.removed FROM tokens t, urls u WHERE u.token = t.token AND u.user_id = $1", userID,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -177,14 +218,16 @@ func (d *DB) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 	for rows.Next() {
 		var value string
 		var timestamp int64
-		err = rows.Scan(&value, &timestamp)
+		var removed bool
+		err = rows.Scan(&value, &timestamp, &removed)
 		if err != nil {
 			return nil, err
 		}
 
 		tokens = append(tokens, &tkn.Token{
-			Value:  value,
-			Expire: time.Unix(timestamp, 0),
+			Value:   value,
+			Expire:  time.Unix(timestamp, 0),
+			Removed: removed,
 		})
 	}
 

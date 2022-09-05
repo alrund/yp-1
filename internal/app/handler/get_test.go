@@ -43,6 +43,7 @@ func (st *Storage) HasURL(string) (bool, error)                                 
 func (st *Storage) Set(string, string, *tkn.Token) error                          { return nil }
 func (st *Storage) SetBatch(userID string, url2token map[string]*tkn.Token) error { return nil }
 func (st *Storage) Ping(ctx context.Context) error                                { return nil }
+func (st *Storage) RemoveTokens(tokenValues []string, userID string) error        { return nil }
 
 var us2 = &app.URLShortener{
 	Config: &config.Config{
