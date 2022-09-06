@@ -11,6 +11,9 @@ lint:
 fix:
 	golangci-lint run --fix
 
+goimports:
+	goimports -d .
+
 test:
 	go test -v ./...
 
