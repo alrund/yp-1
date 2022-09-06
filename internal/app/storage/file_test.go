@@ -422,6 +422,56 @@ func TestNewFileStorage(t *testing.T) {
 	}
 }
 
+func BenchmarkFileGet(b *testing.B) {
+	createTestData(`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`)
+	defer clearTestData()
+	storage := &File{
+		FileName: TestStorageFileName,
+	}
+	b.Run("GetToken", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetToken("xxx")
+		}
+	})
+	b.Run("GetTokenByURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetTokenByURL("url")
+		}
+	})
+	b.Run("GetTokensByUserID", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetTokensByUserID("XXX-YYY-ZZZ")
+		}
+	})
+	b.Run("GetURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetURL("xxx")
+		}
+	})
+	b.Run("HasToken", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.HasToken("xxx")
+		}
+	})
+	b.Run("HasURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.HasURL("url")
+		}
+	})
+	b.Run("Set", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = storage.Set("XXX-YYY-ZZZ", "url", &tkn.Token{
+				Value:  "yyy",
+				Expire: time.Now().Add(tkn.LifeTime),
+			})
+		}
+	})
+}
+
 func createTestData(testJSON string) {
 	file, err := os.Create(TestStorageFileName)
 	if err != nil {

@@ -61,3 +61,15 @@ func TestDecrypt(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncrypt(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = enc.Encrypt("раз два три")
+	}
+}
+
+func BenchmarkDecrypt(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = enc.Decrypt("d54f7a94af13b05cf383b5715e8b45d91dbe2ce8588d464304f67eddb237e752b2540951")
+	}
+}

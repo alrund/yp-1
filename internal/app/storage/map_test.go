@@ -465,3 +465,58 @@ func TestNewMapStorage(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkMapGet(b *testing.B) {
+	storage := &Map{
+		userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"xxx"}},
+		url2tokenValue:    map[string]string{"url": "xxx"},
+		tokenValue2composite: map[string]*composite{
+			"xxx": {
+				Token: &tkn.Token{
+					Value:  "yyy",
+					Expire: time.Now().Add(tkn.LifeTime),
+				},
+				URL:    "url",
+				UserID: "XXX-YYY-ZZZ",
+			},
+		},
+	}
+	b.Run("GetToken", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetToken("xxx")
+		}
+	})
+	b.Run("GetTokenByURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetTokenByURL("url")
+		}
+	})
+	b.Run("GetTokensByUserID", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetTokensByUserID("XXX-YYY-ZZZ")
+		}
+	})
+	b.Run("GetURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.GetURL("xxx")
+		}
+	})
+	b.Run("HasToken", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.HasToken("xxx")
+		}
+	})
+	b.Run("HasURL", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = storage.HasURL("url")
+		}
+	})
+	b.Run("Set", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = storage.Set("XXX-YYY-ZZZ", "url", &tkn.Token{
+				Value:  "yyy",
+				Expire: time.Now().Add(tkn.LifeTime),
+			})
+		}
+	})
+}
