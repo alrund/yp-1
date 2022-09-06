@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
@@ -74,6 +75,14 @@ func main() {
 	r.HandleFunc("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
 		handler.DeleteURLs(us, w, r)
 	}).Methods(http.MethodDelete)
+
+	subRouter := r.PathPrefix("/debug/pprof").Subrouter()
+	subRouter.HandleFunc("/", pprof.Index)
+	subRouter.HandleFunc("/cmdline", pprof.Cmdline)
+	subRouter.HandleFunc("/profile", pprof.Profile)
+	subRouter.HandleFunc("/symbol", pprof.Symbol)
+	subRouter.HandleFunc("/trace", pprof.Trace)
+	subRouter.HandleFunc("/{name}", pprof.Index)
 
 	r.Use(middleware.Compress)
 	r.Use(middleware.Decompress)
