@@ -14,3 +14,10 @@ func TestGenerate(t *testing.T) {
 		assert.NotContains(t, charset, r)
 	}
 }
+
+func BenchmarkGenerate(b *testing.B) {
+	sg := &Simple{}
+	for i := 0; i < b.N; i++ {
+		_, _ = sg.Generate()
+	}
+}
