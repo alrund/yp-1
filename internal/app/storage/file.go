@@ -12,6 +12,7 @@ import (
 
 type File struct {
 	FileName string
+	state    map[string]composite
 	mx       sync.RWMutex
 }
 
@@ -218,6 +219,8 @@ func (s *File) saveState(state map[string]composite) error {
 		return err
 	}
 
+	s.state = state
+
 	return nil
 }
 
@@ -225,27 +228,31 @@ func (s *File) restoreState() (map[string]composite, error) {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 
-	state := make(map[string]composite)
+	if s.state == nil {
+		state := make(map[string]composite)
 
-	if _, err := os.Stat(s.FileName); errors.Is(err, os.ErrNotExist) {
-		return state, nil
+		if _, err := os.Stat(s.FileName); errors.Is(err, os.ErrNotExist) {
+			return state, nil
+		}
+
+		stateJSON, err := os.ReadFile(s.FileName)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(stateJSON) == 0 {
+			return state, nil
+		}
+
+		err = json.Unmarshal(stateJSON, &state)
+		if err != nil {
+			return nil, err
+		}
+
+		s.state = state
 	}
 
-	stateJSON, err := os.ReadFile(s.FileName)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(stateJSON) == 0 {
-		return state, nil
-	}
-
-	err = json.Unmarshal(stateJSON, &state)
-	if err != nil {
-		return nil, err
-	}
-
-	return state, nil
+	return s.state, nil
 }
 
 func (s *File) Ping(ctx context.Context) error {
