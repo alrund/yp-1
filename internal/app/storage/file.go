@@ -204,7 +204,7 @@ func (s *File) saveState(state map[string]composite) error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
 
-	file, err := os.OpenFile(s.FileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0644)
+	file, err := os.OpenFile(s.FileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_APPEND, 0o644)
 	if err != nil {
 		return err
 	}

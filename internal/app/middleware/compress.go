@@ -3,7 +3,6 @@ package middleware
 import (
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -53,7 +52,7 @@ func Decompress(next http.Handler) http.Handler {
 
 		r.Header.Del("Content-Encoding")
 		r.Header.Del("Content-Length")
-		r.Body = ioutil.NopCloser(gz)
+		r.Body = io.NopCloser(gz)
 
 		next.ServeHTTP(w, r)
 	})
