@@ -10,6 +10,7 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
+// Storage data storage.
 type Storage interface {
 	Set(userID, url string, token *tkn.Token) error
 	SetBatch(userID string, url2token map[string]*tkn.Token) error
@@ -24,24 +25,29 @@ type Storage interface {
 	RemoveTokens(tokenValues []string, userID string) error
 }
 
+// URLShortener url shortening application
 type URLShortener struct {
 	Config *config.Config
 	Storage
 	TokenGenerator tkn.Generator
 }
 
+// GetConfig returns configuration data.
 func (us *URLShortener) GetConfig() *config.Config {
 	return us.Config
 }
 
+// GetServerAddress returns server address.
 func (us *URLShortener) GetServerAddress() string {
 	return us.Config.ServerAddress
 }
 
+// GetBaseURL returns base url.
 func (us *URLShortener) GetBaseURL() string {
 	return strings.TrimRight(us.Config.BaseURL, "/") + "/"
 }
 
+// Add adds a URL string to shorten.
 func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 	ok, err := us.HasURL(url)
 	if err != nil {
@@ -71,6 +77,7 @@ func (us *URLShortener) Add(userID, url string) (*tkn.Token, error) {
 	return token, nil
 }
 
+// AddBatch adds multiple URLs at once for shortening.
 func (us *URLShortener) AddBatch(userID string, urls []string) (map[string]*tkn.Token, error) {
 	url2token := map[string]*tkn.Token{}
 	url2newtoken := map[string]*tkn.Token{}
@@ -107,6 +114,7 @@ func (us *URLShortener) AddBatch(userID string, urls []string) (map[string]*tkn.
 	return url2token, storageErr
 }
 
+// Get returns a URL by token.
 func (us *URLShortener) Get(tokenValue string) (string, error) {
 	ok, err := us.HasToken(tokenValue)
 	if err != nil {
@@ -127,6 +135,7 @@ func (us *URLShortener) Get(tokenValue string) (string, error) {
 	return "", storage.ErrTokenNotFound
 }
 
+// GetUserURLs returns a URL by user ID.
 func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLpairs, error) {
 	baseURL := us.GetBaseURL()
 	URLPairs, err := us.GetURLsByUserID(userID)

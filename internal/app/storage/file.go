@@ -10,6 +10,7 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
+// File storage.
 type File struct {
 	FileName string
 	state    map[string]composite

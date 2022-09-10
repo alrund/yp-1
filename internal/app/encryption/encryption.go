@@ -15,6 +15,7 @@ func NewEncryption(cipherPass string) *Encryption {
 	return &Encryption{CipherPass: cipherPass}
 }
 
+// Encrypt encodes data string.
 func (e *Encryption) Encrypt(data string) (string, error) {
 	aesgcm, nonce, err := e.getAesgcm()
 	if err != nil {
@@ -24,6 +25,7 @@ func (e *Encryption) Encrypt(data string) (string, error) {
 	return hex.EncodeToString(aesgcm.Seal(nil, nonce, []byte(data), nil)), nil
 }
 
+// Decrypt decodes data string.
 func (e *Encryption) Decrypt(encrypted string) (string, error) {
 	aesgcm, nonce, err := e.getAesgcm()
 	if err != nil {

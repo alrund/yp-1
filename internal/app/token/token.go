@@ -12,10 +12,12 @@ var (
 
 const LifeTime = 24 * time.Hour
 
+// Generator generates the token value.
 type Generator interface {
 	Generate() (string, error)
 }
 
+// Token shortened URL token.
 type Token struct {
 	Value   string
 	Expire  time.Time
@@ -33,10 +35,12 @@ func NewToken(g Generator) (*Token, error) {
 	}, nil
 }
 
+// IsExpired checks the token expire date.
 func (t *Token) IsExpired() bool {
 	return t.Expire.Before(time.Now())
 }
 
+// Refresh updates the token expire date.
 func (t *Token) Refresh() *Token {
 	t.Expire = time.Now().Add(LifeTime)
 	return t

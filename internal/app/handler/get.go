@@ -15,6 +15,7 @@ type Getter interface {
 	GetUserURLs(userID string) ([]storage.URLpairs, error)
 }
 
+// Get returns a URL by token.
 func Get(us Getter, w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Path[1:]
 	if id == "" {
@@ -51,6 +52,7 @@ func Get(us Getter, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetUserURLs returns a URL by user ID.
 func GetUserURLs(us Getter, w http.ResponseWriter, r *http.Request) {
 	contextUserID := r.Context().Value(middleware.UserIDContextKey)
 	userID, ok := contextUserID.(string)

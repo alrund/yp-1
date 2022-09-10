@@ -15,6 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib" // pgx
 )
 
+// DB database storage.
 type DB struct {
 	db *sql.DB
 }
