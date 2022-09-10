@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -192,6 +194,60 @@ func TestAddJSON(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+// nolint
+func ExampleAdd() {
+	serverAddress := "http://localhost:8080"
+	endpoint := "/"
+	stringData := "https://ya.ru"
+
+	r, err := http.Post(
+		serverAddress+endpoint,
+		"text/plain",
+		bytes.NewBufferString(stringData),
+	)
+	if err != nil {
+		fmt.Println("get error", err)
+		return
+	}
+	defer r.Body.Close()
+
+	buf, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("read error", err)
+		return
+	}
+
+	fmt.Println(string(buf))
+	// serverAddress + "/oTHlXx"
+}
+
+// nolint
+func ExampleAddJSON() {
+	serverAddress := "http://localhost:8080"
+	endpoint := "/api/shorten"
+	data := `{"url": "https://ya.ru"}`
+
+	r, err := http.Post(
+		serverAddress+endpoint,
+		"application/json; charset=utf-8",
+		strings.NewReader(data),
+	)
+	if err != nil {
+		fmt.Println("get error", err)
+		return
+	}
+	defer r.Body.Close()
+
+	buf, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("read error", err)
+		return
+	}
+
+	fmt.Println(string(buf))
+	// {"result":"http://localhost:8080/oTHlXx"}
 }
 
 func getNewRequestWithUserID(method, target, userID string, body io.Reader) *http.Request {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -218,4 +219,37 @@ func TestAddBatchJSONFail(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+// nolint
+func ExampleAddBatchJSON() {
+	serverAddress := "http://localhost:8080"
+	endpoint := "/api/shorten/batch"
+	data := `[
+		{"correlation_id":"xxx","original_url":"https://ya.ru"},
+		{"correlation_id":"yyy","original_url":"https://google.com"}
+	]`
+
+	r, err := http.Post(
+		serverAddress+endpoint,
+		"application/json; charset=utf-8",
+		strings.NewReader(data),
+	)
+	if err != nil {
+		fmt.Println("get error", err)
+		return
+	}
+	defer r.Body.Close()
+
+	buf, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("read error", err)
+		return
+	}
+
+	fmt.Println(string(buf))
+	//	[
+	//		{"correlation_id":"xxx","short_url":"http://localhost:8080/oTHlXx"},
+	//		{"correlation_id":"yyy","short_url":"http://localhost:8080/FaMvXd"}
+	//	]
 }

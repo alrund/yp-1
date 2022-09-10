@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -135,4 +136,44 @@ func TestGet(t *testing.T) {
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
+}
+
+// nolint
+func ExampleGet() {
+	serverAddress := "http://localhost:8080"
+	endpoint := "/oTHlXx"
+
+	r, err := http.Get(serverAddress + endpoint)
+	if err != nil {
+		fmt.Println("get error", err)
+		return
+	}
+	defer r.Body.Close()
+
+	fmt.Println(r.StatusCode)
+	// 200
+}
+
+// nolint
+func ExampleGetUserURLs() {
+	serverAddress := "http://localhost:8080"
+	endpoint := "/api/user/urls"
+
+	r, err := http.Get(serverAddress + endpoint)
+	if err != nil {
+		fmt.Println("get error", err)
+		return
+	}
+	defer r.Body.Close()
+
+	buf, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("read error", err)
+		return
+	}
+
+	fmt.Println(string(buf))
+	//	[
+	//		{"short_url": "http://localhost:8080/koRTZS", "original_url": "https://google.ru"}
+	//	]
 }

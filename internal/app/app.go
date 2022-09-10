@@ -25,7 +25,7 @@ type Storage interface {
 	RemoveTokens(tokenValues []string, userID string) error
 }
 
-// URLShortener url shortening application
+// URLShortener url shortening application.
 type URLShortener struct {
 	Config *config.Config
 	Storage
