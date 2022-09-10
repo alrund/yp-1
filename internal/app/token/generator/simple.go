@@ -11,12 +11,14 @@ const (
 	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
+// Simple generates the simple token value.
 type Simple struct{}
 
 func NewSimple() *Simple {
 	return &Simple{}
 }
 
+// Generate generates a random string.
 func (st *Simple) Generate() (string, error) {
 	rs, err := st.randomString(Length)
 	if err != nil {

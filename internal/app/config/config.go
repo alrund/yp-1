@@ -14,6 +14,7 @@ type Config struct {
 	CipherPass      string `env:"CIPHER_PASSWORD" envDefault:"J53RPX6"`
 }
 
+// GetConfig returns configuration data.
 func GetConfig() *Config {
 	cfg := &Config{}
 	if err := env.Parse(cfg); err != nil {

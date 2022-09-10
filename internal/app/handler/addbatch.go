@@ -20,6 +20,7 @@ type JSONBatchResponseRow struct {
 	ShortURL      string `json:"short_url"`
 }
 
+// AddBatchJSON adds multiple URLs at once for shortening.
 func AddBatchJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	httpCode := http.StatusCreated
 

@@ -7,6 +7,7 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
 
+// Map hash map storage.
 type Map struct {
 	userID2tokenValue    map[string][]string
 	url2tokenValue       map[string]string

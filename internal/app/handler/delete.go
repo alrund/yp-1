@@ -12,6 +12,7 @@ type Remover interface {
 	RemoveTokens(tokenValues []string, userID string) error
 }
 
+// DeleteURLs deletes shortened URL tokens.
 func DeleteURLs(us Remover, w http.ResponseWriter, r *http.Request) {
 	if !hasContentType(r, "application/json") {
 		http.Error(w, "415 Unsupported Media Type.", http.StatusUnsupportedMediaType)

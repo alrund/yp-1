@@ -26,6 +26,7 @@ type JSONResponse struct {
 	Result string `json:"result"`
 }
 
+// Add adds a URL string to shorten.
 func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 	httpCode := http.StatusCreated
 
@@ -60,6 +61,7 @@ func Add(us Adder, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AddJSON adds a URL string to shorten as a JSON object.
 func AddJSON(us Adder, w http.ResponseWriter, r *http.Request) {
 	httpCode := http.StatusCreated
 
