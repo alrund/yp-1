@@ -221,19 +221,15 @@ func TestAddBatchJSONFail(t *testing.T) {
 	}
 }
 
-// nolint
 func ExampleAddBatchJSON() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/api/shorten/batch"
-	data := `[
+	// nolint
+	r, err := http.Post(
+		"http://localhost:8080/api/shorten/batch",
+		"application/json; charset=utf-8",
+		strings.NewReader(`[
 		{"correlation_id":"xxx","original_url":"https://ya.ru"},
 		{"correlation_id":"yyy","original_url":"https://google.com"}
-	]`
-
-	r, err := http.Post(
-		serverAddress+endpoint,
-		"application/json; charset=utf-8",
-		strings.NewReader(data),
+	]`),
 	)
 	if err != nil {
 		fmt.Println("get error", err)
@@ -248,8 +244,8 @@ func ExampleAddBatchJSON() {
 	}
 
 	fmt.Println(string(buf))
-	//	[
-	//		{"correlation_id":"xxx","short_url":"http://localhost:8080/oTHlXx"},
-	//		{"correlation_id":"yyy","short_url":"http://localhost:8080/FaMvXd"}
-	//	]
+	//[
+	// {"correlation_id":"xxx","short_url":"http://localhost:8080/oTHlXx"},
+	// {"correlation_id":"yyy","short_url":"http://localhost:8080/FaMvXd"}
+	//]
 }
