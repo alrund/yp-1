@@ -138,12 +138,9 @@ func TestGet(t *testing.T) {
 	}
 }
 
-// nolint
 func ExampleGet() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/oTHlXx"
-
-	r, err := http.Get(serverAddress + endpoint)
+	// nolint
+	r, err := http.Get("http://localhost:8080/oTHlXx")
 	if err != nil {
 		fmt.Println("get error", err)
 		return
@@ -154,12 +151,9 @@ func ExampleGet() {
 	// 200
 }
 
-// nolint
 func ExampleGetUserURLs() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/api/user/urls"
-
-	r, err := http.Get(serverAddress + endpoint)
+	// nolint
+	r, err := http.Get("http://localhost:8080/api/user/urls")
 	if err != nil {
 		fmt.Println("get error", err)
 		return
@@ -173,7 +167,7 @@ func ExampleGetUserURLs() {
 	}
 
 	fmt.Println(string(buf))
-	//	[
-	//		{"short_url": "http://localhost:8080/koRTZS", "original_url": "https://google.ru"}
-	//	]
+	// [
+	//  {"short_url": "http://localhost:8080/koRTZS", "original_url": "https://google.ru"}
+	// ]
 }

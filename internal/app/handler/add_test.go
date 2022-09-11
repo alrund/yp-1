@@ -196,16 +196,12 @@ func TestAddJSON(t *testing.T) {
 	}
 }
 
-// nolint
 func ExampleAdd() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/"
-	stringData := "https://ya.ru"
-
+	// nolint
 	r, err := http.Post(
-		serverAddress+endpoint,
+		"http://localhost:8080/",
 		"text/plain",
-		bytes.NewBufferString(stringData),
+		bytes.NewBufferString("https://ya.ru"),
 	)
 	if err != nil {
 		fmt.Println("get error", err)
@@ -220,19 +216,15 @@ func ExampleAdd() {
 	}
 
 	fmt.Println(string(buf))
-	// serverAddress + "/oTHlXx"
+	// "http://localhost:8080/oTHlXx"
 }
 
-// nolint
 func ExampleAddJSON() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/api/shorten"
-	data := `{"url": "https://ya.ru"}`
-
+	// nolint
 	r, err := http.Post(
-		serverAddress+endpoint,
+		"http://localhost:8080/api/shorten",
 		"application/json; charset=utf-8",
-		strings.NewReader(data),
+		strings.NewReader(`{"url": "https://ya.ru"}`),
 	)
 	if err != nil {
 		fmt.Println("get error", err)

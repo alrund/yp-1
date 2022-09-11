@@ -7,18 +7,14 @@ import (
 	"strings"
 )
 
-// nolint
 func ExampleDeleteURLs() {
-	serverAddress := "http://localhost:8080"
-	endpoint := "/api/user/urls"
-	data := `["oTHlXx", "bjHoyQ"]`
-
+	// nolint
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(
 		context.Background(),
 		http.MethodDelete,
-		serverAddress+endpoint,
-		strings.NewReader(data),
+		"http://localhost:8080/api/user/urls",
+		strings.NewReader(`["oTHlXx", "bjHoyQ"]`),
 	)
 	if err != nil {
 		fmt.Println("get error", err)
