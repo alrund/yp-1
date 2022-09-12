@@ -14,28 +14,34 @@ import (
 type File struct {
 	FileName string
 	state    map[string]composite
+	stateMx  sync.RWMutex
 	mx       sync.RWMutex
 }
 
 func NewFile(fileName string) (*File, error) {
-	return &File{
+	file := &File{
 		FileName: fileName,
-	}, nil
+		state:    make(map[string]composite),
+	}
+
+	if err := file.restoreState(); err != nil {
+		return nil, err
+	}
+
+	return file, nil
 }
 
 func (s *File) Set(userID string, url string, token *tkn.Token) error {
-	state, err := s.restoreState()
-	if err != nil {
-		return err
-	}
+	s.stateMx.Lock()
+	defer s.stateMx.Unlock()
 
-	composite := state[url]
+	composite := s.state[url]
 	composite.Token = token
 	composite.URL = url
 	composite.UserID = userID
-	state[url] = composite
+	s.state[url] = composite
 
-	return s.saveState(state)
+	return s.saveState()
 }
 
 func (s *File) SetBatch(userID string, url2token map[string]*tkn.Token) error {
@@ -50,12 +56,10 @@ func (s *File) SetBatch(userID string, url2token map[string]*tkn.Token) error {
 }
 
 func (s *File) RemoveTokens(tokenValues []string, userID string) error {
-	state, err := s.restoreState()
-	if err != nil {
-		return err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for _, composite := range state {
+	for _, composite := range s.state {
 		if composite.Token == nil {
 			continue
 		}
@@ -71,16 +75,14 @@ func (s *File) RemoveTokens(tokenValues []string, userID string) error {
 		}
 	}
 
-	return s.saveState(state)
+	return s.saveState()
 }
 
 func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return nil, err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for _, composite := range state {
+	for _, composite := range s.state {
 		if composite.Token == nil {
 			return nil, ErrTokenNotFound
 		}
@@ -93,12 +95,10 @@ func (s *File) GetToken(tokenValue string) (*tkn.Token, error) {
 }
 
 func (s *File) GetTokenByURL(url string) (*tkn.Token, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return nil, err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for u, composite := range state {
+	for u, composite := range s.state {
 		if u == url {
 			return composite.Token, nil
 		}
@@ -108,13 +108,11 @@ func (s *File) GetTokenByURL(url string) (*tkn.Token, error) {
 }
 
 func (s *File) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return nil, err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
 	tokens := make([]*tkn.Token, 0)
-	for _, composite := range state {
+	for _, composite := range s.state {
 		if userID == composite.UserID {
 			tokens = append(tokens, composite.Token)
 		}
@@ -128,12 +126,10 @@ func (s *File) GetTokensByUserID(userID string) ([]*tkn.Token, error) {
 }
 
 func (s *File) GetURL(tokenValue string) (string, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return "", err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for url, composite := range state {
+	for url, composite := range s.state {
 		if composite.Token == nil {
 			return "", ErrTokenNotFound
 		}
@@ -146,12 +142,10 @@ func (s *File) GetURL(tokenValue string) (string, error) {
 }
 
 func (s *File) HasURL(url string) (bool, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return false, err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for u := range state {
+	for u := range s.state {
 		if u == url {
 			return true, nil
 		}
@@ -161,12 +155,10 @@ func (s *File) HasURL(url string) (bool, error) {
 }
 
 func (s *File) HasToken(tokenValue string) (bool, error) {
-	state, err := s.restoreState()
-	if err != nil {
-		return false, err
-	}
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
 
-	for _, composite := range state {
+	for _, composite := range s.state {
 		if composite.Token == nil {
 			return false, nil
 		}
@@ -200,7 +192,7 @@ func (s *File) GetURLsByUserID(userID string) ([]URLpairs, error) {
 	return nil, ErrURLNotFound
 }
 
-func (s *File) saveState(state map[string]composite) error {
+func (s *File) saveState() error {
 	s.mx.Lock()
 	defer s.mx.Unlock()
 
@@ -210,7 +202,7 @@ func (s *File) saveState(state map[string]composite) error {
 	}
 	defer file.Close()
 
-	stateJSON, err := json.Marshal(state)
+	stateJSON, err := json.Marshal(s.state)
 	if err != nil {
 		return err
 	}
@@ -220,40 +212,39 @@ func (s *File) saveState(state map[string]composite) error {
 		return err
 	}
 
-	s.state = state
-
 	return nil
 }
 
-func (s *File) restoreState() (map[string]composite, error) {
+func (s *File) restoreState() error {
 	s.mx.RLock()
 	defer s.mx.RUnlock()
 
-	if s.state == nil {
-		state := make(map[string]composite)
+	s.stateMx.Lock()
+	defer s.stateMx.Unlock()
 
-		if _, err := os.Stat(s.FileName); errors.Is(err, os.ErrNotExist) {
-			return state, nil
-		}
+	state := make(map[string]composite)
 
-		stateJSON, err := os.ReadFile(s.FileName)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(stateJSON) == 0 {
-			return state, nil
-		}
-
-		err = json.Unmarshal(stateJSON, &state)
-		if err != nil {
-			return nil, err
-		}
-
-		s.state = state
+	if _, err := os.Stat(s.FileName); errors.Is(err, os.ErrNotExist) {
+		return nil
 	}
 
-	return s.state, nil
+	stateJSON, err := os.ReadFile(s.FileName)
+	if err != nil {
+		return err
+	}
+
+	if len(stateJSON) == 0 {
+		return nil
+	}
+
+	err = json.Unmarshal(stateJSON, &state)
+	if err != nil {
+		return err
+	}
+
+	s.state = state
+
+	return nil
 }
 
 func (s *File) Ping(ctx context.Context) error {

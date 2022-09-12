@@ -13,6 +13,56 @@ import (
 
 const TestStorageFileName = "test_storage"
 
+func TestRaceFileGetToken(t *testing.T) {
+	type args struct {
+		tokenValue string
+	}
+	tests := []struct {
+		name         string
+		storageState string
+		args         args
+		want         string
+		wantErr      bool
+	}{
+		{
+			"success",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				tokenValue: "yyy",
+			},
+			"yyy",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData(tt.storageState)
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			go func() {
+				_ = storage.Set("UUU", "URL", &tkn.Token{
+					Value:  "yyy",
+					Expire: time.Now().Add(tkn.LifeTime),
+				})
+			}()
+			got, err := storage.GetToken(tt.args.tokenValue)
+			if tt.want != "" {
+				require.NotNil(t, got)
+				assert.Equal(t, tt.want, got.Value)
+			}
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
+
 func TestFileGetToken(t *testing.T) {
 	type args struct {
 		tokenValue string
@@ -56,9 +106,8 @@ func TestFileGetToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.GetToken(tt.args.tokenValue)
 			if tt.want != "" {
 				require.NotNil(t, got)
@@ -113,9 +162,8 @@ func TestFileGetTokenByURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.GetTokenByURL(tt.args.url)
 			if tt.want != "" {
 				require.NotNil(t, got)
@@ -170,9 +218,8 @@ func TestFileGetTokensByUserID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.GetTokensByUserID(tt.args.userID)
 			if tt.want != "" {
 				require.NotNil(t, got)
@@ -228,9 +275,8 @@ func TestFileGetURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.GetURL(tt.args.tokenValue)
 			if tt.want != "" {
 				require.NotNil(t, got)
@@ -285,9 +331,8 @@ func TestFileHasToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.HasToken(tt.args.tokenValue)
 			require.NotNil(t, got)
 			assert.Equal(t, tt.want, got)
@@ -340,9 +385,8 @@ func TestFileHasURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			createTestData(tt.storageState)
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
 			got, err := storage.HasURL(tt.args.url)
 			require.NotNil(t, got)
 			assert.Equal(t, tt.want, got)
@@ -382,16 +426,11 @@ func TestFileSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			defer clearTestData()
-			storage := &File{
-				FileName: TestStorageFileName,
-			}
-			err := storage.Set(tt.args.userID, tt.args.url, tt.args.token)
-			state, storageErr := storage.restoreState()
-			if storageErr != nil {
-				log.Fatal(storageErr)
-			}
-			assert.NotNil(t, state[tt.args.url].Token)
-			assert.Equal(t, tt.want, state[tt.args.url].Token.Value)
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			err = storage.Set(tt.args.userID, tt.args.url, tt.args.token)
+			assert.NotNil(t, storage.state[tt.args.url].Token)
+			assert.Equal(t, tt.want, storage.state[tt.args.url].Token.Value)
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			}
@@ -408,11 +447,13 @@ func TestNewFileStorage(t *testing.T) {
 			name: "success",
 			want: &File{
 				FileName: TestStorageFileName,
+				state:    make(map[string]composite),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			defer clearTestData()
 			storage, err := NewFile(TestStorageFileName)
 			if err != nil {
 				log.Fatal(err)
@@ -429,9 +470,7 @@ func BenchmarkFileGet(b *testing.B) {
 							"UserID":"XXX-YYY-ZZZ"}
 						}`)
 	defer clearTestData()
-	storage := &File{
-		FileName: TestStorageFileName,
-	}
+	storage, _ := NewFile(TestStorageFileName)
 	b.Run("GetToken", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_, _ = storage.GetToken("xxx")
@@ -484,8 +523,5 @@ func createTestData(testJSON string) {
 }
 
 func clearTestData() {
-	err := os.Remove(TestStorageFileName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = os.Remove(TestStorageFileName)
 }

@@ -8,7 +8,6 @@ import (
 )
 
 func ExampleDeleteURLs() {
-	// nolint
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(
 		context.Background(),
