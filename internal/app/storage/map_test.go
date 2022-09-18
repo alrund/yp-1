@@ -275,6 +275,75 @@ func TestGetURL(t *testing.T) {
 	}
 }
 
+func TestGetURLsByUserID(t *testing.T) {
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name    string
+		storage *Map
+		args    args
+		want    []URLpairs
+		wantErr bool
+	}{
+		{
+			"success",
+			&Map{
+				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"yyy"}},
+				url2tokenValue:    map[string]string{"url": "yyy"},
+				tokenValue2composite: map[string]*composite{
+					"yyy": {
+						Token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						URL:    "url",
+						UserID: "XXX-YYY-ZZZ",
+					},
+				},
+			},
+			args{
+				userID: "XXX-YYY-ZZZ",
+			},
+			[]URLpairs{{ShortURL: "yyy", OriginalURL: "url"}},
+			false,
+		},
+		{
+			"fail",
+			&Map{
+				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"yyy"}},
+				url2tokenValue:    map[string]string{"url": "yyy"},
+				tokenValue2composite: map[string]*composite{
+					"yyy": {
+						Token: &tkn.Token{
+							Value:  "yyy",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						URL:    "url",
+						UserID: "XXX-YYY-ZZZ",
+					},
+				},
+			},
+			args{
+				userID: "BAD",
+			},
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.storage.GetURLsByUserID(tt.args.userID)
+			if tt.want != nil {
+				assert.Equal(t, tt.want, got)
+			}
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
+
 func TestHasToken(t *testing.T) {
 	type args struct {
 		tokenValue string
@@ -441,6 +510,47 @@ func TestSet(t *testing.T) {
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			}
+		})
+	}
+}
+
+func TestRemoveTokens(t *testing.T) {
+	type args struct {
+		tokenValues []string
+	}
+	tests := []struct {
+		name    string
+		storage *Map
+		args    args
+	}{
+		{
+			"success",
+			&Map{
+				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"xxx"}},
+				url2tokenValue:    map[string]string{"url": "xxx"},
+				tokenValue2composite: map[string]*composite{
+					"xxx": {
+						Token: &tkn.Token{
+							Value:  "xxx",
+							Expire: time.Now().Add(tkn.LifeTime),
+						},
+						URL:    "url",
+						UserID: "XXX-YYY-ZZZ",
+					},
+				},
+			},
+			args{
+				tokenValues: []string{"xxx"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.storage.RemoveTokens(tt.args.tokenValues, "XXX-YYY-ZZZ")
+			assert.NoError(t, err)
+			token, err := tt.storage.GetToken("xxx")
+			assert.NoError(t, err)
+			assert.True(t, token.Removed)
 		})
 	}
 }
