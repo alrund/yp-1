@@ -15,6 +15,23 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
+func TestNewSimple(t *testing.T) {
+	tests := []struct {
+		name string
+		want *Simple
+	}{
+		{
+			name: "success",
+			want: &Simple{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, NewSimple())
+		})
+	}
+}
+
 func BenchmarkGenerate(b *testing.B) {
 	sg := &Simple{}
 	for i := 0; i < b.N; i++ {
