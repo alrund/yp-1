@@ -150,6 +150,8 @@ package main
 
 import (
 	"github.com/alrund/yp-1/cmd/staticlint/osexitanalyzer"
+	"github.com/charithe/durationcheck"
+	"github.com/timakin/bodyclose/passes/bodyclose"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/multichecker"
 	"golang.org/x/tools/go/analysis/passes/asmdecl"
@@ -232,6 +234,9 @@ func main() {
 	}
 
 	mychecks = append(mychecks, stylecheck.Analyzers["ST1005"])
+
+	mychecks = append(mychecks, bodyclose.Analyzer)
+	mychecks = append(mychecks, durationcheck.Analyzer)
 
 	mychecks = append(mychecks, osexitanalyzer.OsExitAnalyzer)
 
