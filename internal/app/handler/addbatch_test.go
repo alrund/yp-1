@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"testing"
 
@@ -13,6 +15,17 @@ import (
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/stretchr/testify/assert"
 )
+
+type TestJSONResponse struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
+}
+
+type ByCorrelationID []TestJSONResponse
+
+func (a ByCorrelationID) Len() int           { return len(a) }
+func (a ByCorrelationID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCorrelationID) Less(i, j int) bool { return a[i].CorrelationID < a[j].CorrelationID }
 
 func TestAddBatchJSONSuccess(t *testing.T) {
 	testConfig := &config.Config{
@@ -59,10 +72,10 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 			},
 			want: want{
 				code: http.StatusCreated,
-				response: `[{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
+				response: `[{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
 					testConfig.BaseURL +
 					testToken +
-					`"},{"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94","short_url":"` +
+					`"},{"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d","short_url":"` +
 					testConfig.BaseURL +
 					testToken +
 					`"}]`,
@@ -130,7 +143,18 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			assert.Equalf(t, tt.want.response, string(resBody), w.Body.String())
+			var wantResponses []TestJSONResponse
+			err = json.Unmarshal([]byte(tt.want.response), &wantResponses)
+			assert.NoError(t, err)
+
+			var bodyResponses []TestJSONResponse
+			err = json.Unmarshal(resBody, &bodyResponses)
+			assert.NoError(t, err)
+
+			sort.Sort(ByCorrelationID(wantResponses))
+			sort.Sort(ByCorrelationID(bodyResponses))
+
+			assert.Equal(t, wantResponses, bodyResponses)
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
 		})
 	}
