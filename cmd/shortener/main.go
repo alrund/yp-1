@@ -88,5 +88,6 @@ func main() {
 	r.Use(middleware.Decompress)
 	r.Use(middleware.Auth(encryption.NewEncryption(cfg.CipherPass)))
 
+	//nolint
 	log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
 }
