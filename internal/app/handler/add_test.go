@@ -197,7 +197,7 @@ func TestAddJSON(t *testing.T) {
 }
 
 func ExampleAdd() {
-	// nolint
+	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/",
 		"text/plain",
@@ -220,7 +220,7 @@ func ExampleAdd() {
 }
 
 func ExampleAddJSON() {
-	// nolint
+	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/api/shorten",
 		"application/json; charset=utf-8",

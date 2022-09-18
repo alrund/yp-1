@@ -139,7 +139,7 @@ func TestGet(t *testing.T) {
 }
 
 func ExampleGet() {
-	// nolint
+	//nolint
 	r, err := http.Get("http://localhost:8080/oTHlXx")
 	if err != nil {
 		fmt.Println("get error", err)
@@ -152,7 +152,7 @@ func ExampleGet() {
 }
 
 func ExampleGetUserURLs() {
-	// nolint
+	//nolint
 	r, err := http.Get("http://localhost:8080/api/user/urls")
 	if err != nil {
 		fmt.Println("get error", err)

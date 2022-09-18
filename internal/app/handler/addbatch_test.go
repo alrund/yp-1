@@ -222,7 +222,7 @@ func TestAddBatchJSONFail(t *testing.T) {
 }
 
 func ExampleAddBatchJSON() {
-	// nolint
+	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/api/shorten/batch",
 		"application/json; charset=utf-8",
