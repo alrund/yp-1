@@ -24,24 +24,9 @@ func TestDelete(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 
-	testStorage := storage.NewMap()
-	_ = testStorage.Set("XXX-YYY-ZZZ", "http://ya.ru", &tkn.Token{
-		Value:  "xxx",
-		Expire: time.Now().Add(tkn.LifeTime),
-	})
-	_ = testStorage.Set("XXX-YYY-ZZZ", "http://google.com", &tkn.Token{
-		Value:  "yyy",
-		Expire: time.Now().Add(tkn.LifeTime),
-	})
-
-	us2 := &app.URLShortener{
-		Config:         testConfig,
-		Storage:        testStorage,
-		TokenGenerator: generator.NewSimple(),
-	}
-
 	type want struct {
 		code int
+		num  int
 	}
 	type request struct {
 		method      string
@@ -66,11 +51,55 @@ func TestDelete(t *testing.T) {
 			},
 			want: want{
 				code: http.StatusAccepted,
+				num:  1,
+			},
+		},
+		{
+			name: "incorrect content-type",
+			request: request{
+				method:      http.MethodDelete,
+				target:      "/api/user/urls",
+				userID:      "XXX-YYY-ZZZ",
+				body:        `["xxx"]`,
+				contentType: "text/plain; charset=utf-8",
+			},
+			want: want{
+				code: http.StatusUnsupportedMediaType,
+				num:  2,
+			},
+		},
+		{
+			name: "bad request",
+			request: request{
+				method:      http.MethodDelete,
+				target:      "/api/user/urls",
+				userID:      "XXX-YYY-ZZZ",
+				body:        `"xxx"]`,
+				contentType: "application/json; charset=utf-8",
+			},
+			want: want{
+				code: http.StatusBadRequest,
+				num:  2,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			testStorage := storage.NewMap()
+			_ = testStorage.Set("XXX-YYY-ZZZ", "http://ya.ru", &tkn.Token{
+				Value:  "xxx",
+				Expire: time.Now().Add(tkn.LifeTime),
+			})
+			_ = testStorage.Set("XXX-YYY-ZZZ", "http://google.com", &tkn.Token{
+				Value:  "yyy",
+				Expire: time.Now().Add(tkn.LifeTime),
+			})
+			us2 := &app.URLShortener{
+				Config:         testConfig,
+				Storage:        testStorage,
+				TokenGenerator: generator.NewSimple(),
+			}
+
 			request := httptest.NewRequest(tt.request.method, tt.request.target, strings.NewReader(tt.request.body))
 			request.Header.Set("Content-type", tt.request.contentType)
 			ctx := request.Context()
@@ -98,7 +127,7 @@ func TestDelete(t *testing.T) {
 				num++
 			}
 
-			assert.Equal(t, 1, num)
+			assert.Equal(t, tt.want.num, num)
 		})
 	}
 }

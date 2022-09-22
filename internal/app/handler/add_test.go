@@ -9,11 +9,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
+	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,6 +26,13 @@ func (st *TestGenerator) Generate() (string, error) {
 }
 
 func TestAdd(t *testing.T) {
+	preparedStorage := storage.NewMap()
+	_ = preparedStorage.Set(
+		"XXX-YYY-ZZZ",
+		"existsurl",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
+
 	testConfig := &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080/",
@@ -40,6 +49,7 @@ func TestAdd(t *testing.T) {
 		method string
 		target string
 		userID string
+		body   string
 	}
 	tests := []struct {
 		name    string
@@ -52,9 +62,24 @@ func TestAdd(t *testing.T) {
 				method: http.MethodPost,
 				target: "/",
 				userID: "XXX-YYY-ZZZ",
+				body:   "url",
 			},
 			want: want{
 				code:        http.StatusCreated,
+				response:    testConfig.BaseURL + testToken,
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "exists",
+			request: request{
+				method: http.MethodPost,
+				target: "/",
+				userID: "XXX-YYY-ZZZ",
+				body:   "existsurl",
+			},
+			want: want{
+				code:        http.StatusConflict,
 				response:    testConfig.BaseURL + testToken,
 				contentType: "text/plain; charset=utf-8",
 			},
@@ -64,11 +89,16 @@ func TestAdd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			us := &app.URLShortener{
 				Config:         testConfig,
-				Storage:        storage.NewMap(),
+				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
 
-			request := getNewRequestWithUserID(tt.request.method, tt.request.target, tt.request.userID, nil)
+			request := getNewRequestWithUserID(
+				tt.request.method,
+				tt.request.target,
+				tt.request.userID,
+				strings.NewReader(tt.request.body),
+			)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				Add(us, w, r)
@@ -157,6 +187,21 @@ func TestAddJSON(t *testing.T) {
 			want: want{
 				code:        http.StatusUnsupportedMediaType,
 				response:    "415 Unsupported Media Type.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "bad request",
+			request: request{
+				method:      http.MethodPost,
+				target:      "/api/shorten",
+				userID:      "XXX-YYY-ZZZ",
+				body:        `"url": "https://ya.ru"}`,
+				contentType: "application/json; charset=utf-8",
+			},
+			want: want{
+				code:        http.StatusBadRequest,
+				response:    "400 Bad Request.\n",
 				contentType: "text/plain; charset=utf-8",
 			},
 		},

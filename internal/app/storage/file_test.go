@@ -425,6 +425,7 @@ func TestFileSet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			createTestData("")
 			defer clearTestData()
 			storage, err := NewFile(TestStorageFileName)
 			require.NoError(t, err)
@@ -453,6 +454,7 @@ func TestNewFileStorage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			createTestData("")
 			defer clearTestData()
 			storage, err := NewFile(TestStorageFileName)
 			if err != nil {

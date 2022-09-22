@@ -9,10 +9,12 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/storage"
+	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -166,6 +168,14 @@ func TestAddBatchJSONFail(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
+
+	preparedStorage := storage.NewMap()
+	_ = preparedStorage.Set(
+		"XXX-YYY-ZZZ",
+		"existsurl",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
 
 	type want struct {
 		code        int
@@ -208,13 +218,51 @@ func TestAddBatchJSONFail(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
+		{
+			name: "bad request",
+			request: request{
+				method:      http.MethodPost,
+				target:      "/api/shorten/batch",
+				userID:      "XXX-YYY-ZZZ",
+				body:        `}`,
+				contentType: "application/json",
+			},
+			want: want{
+				code:        http.StatusBadRequest,
+				response:    "400 Bad Request.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+		{
+			name: "conflict",
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten/batch",
+				userID: "XXX-YYY-ZZZ",
+				body: `[
+					{
+						"correlation_id":"222",
+						"original_url":"existsurl"
+					}
+				]`,
+				contentType: "application/json; charset=utf-8",
+			},
+			want: want{
+				code: http.StatusConflict,
+				response: `[{"correlation_id":"222","short_url":"` +
+					testConfig.BaseURL +
+					testToken +
+					`"}]`,
+				contentType: "application/json; charset=utf-8",
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			us := &app.URLShortener{
 				Config:         testConfig,
-				Storage:        storage.NewMap(),
+				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
 			request := getNewRequestWithUserID(
