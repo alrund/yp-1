@@ -17,13 +17,13 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var (
-	buildVersion string
-	buildDate    string
-	buildCommit  string
-)
-
 const defaultBuildValue string = "N/A"
+
+var (
+	buildVersion = defaultBuildValue
+	buildDate    = defaultBuildValue
+	buildCommit  = defaultBuildValue
+)
 
 func main() {
 	printBuildInfo()
@@ -104,15 +104,6 @@ func main() {
 }
 
 func printBuildInfo() {
-	if buildVersion == "" {
-		buildVersion = defaultBuildValue
-	}
-	if buildDate == "" {
-		buildDate = defaultBuildValue
-	}
-	if buildCommit == "" {
-		buildCommit = defaultBuildValue
-	}
 	fmt.Printf("Build version: %s\n", buildVersion)
 	fmt.Printf("Build date: %s\n", buildDate)
 	fmt.Printf("Build commit: %s\n", buildCommit)
