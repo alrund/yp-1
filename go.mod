@@ -14,6 +14,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/charithe/durationcheck v0.0.9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
