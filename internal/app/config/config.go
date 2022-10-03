@@ -12,6 +12,9 @@ type Config struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	DatabaseDsn     string `env:"DATABASE_DSN"` // postgres://dev:dev@localhost:5432/dev
 	CipherPass      string `env:"CIPHER_PASSWORD" envDefault:"J53RPX6"`
+	EnableHTTPS     string `env:"ENABLE_HTTPS" envDefault:""`
+	CertFile        string `env:"CERT_FILE"`
+	KeyFile         string `env:"KEY_FILE"`
 }
 
 // GetConfig returns configuration data.
