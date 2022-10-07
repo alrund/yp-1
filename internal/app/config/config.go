@@ -2,26 +2,72 @@ package config
 
 import (
 	"log"
+	"os"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/alrund/yp-1/internal/app/flags"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH"`
-	DatabaseDsn     string `env:"DATABASE_DSN"` // postgres://dev:dev@localhost:5432/dev
-	CipherPass      string `env:"CIPHER_PASSWORD" envDefault:"J53RPX6"`
-	EnableHTTPS     string `env:"ENABLE_HTTPS" envDefault:""`
-	CertFile        string `env:"CERT_FILE"`
-	KeyFile         string `env:"KEY_FILE"`
+	ServerAddress   string `env:"SERVER_ADDRESS" env-default:"localhost:8080" json:"server_address"`
+	BaseURL         string `env:"BASE_URL" env-default:"http://localhost:8080/" json:"base_url"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
+	DatabaseDsn     string `env:"DATABASE_DSN" json:"database_dsn"` // postgres://dev:dev@localhost:5432/dev
+	CipherPass      string `env:"CIPHER_PASSWORD" env-default:"J53RPX6" json:"-"`
+	EnableHTTPS     bool   `env:"ENABLE_HTTPS" json:"enable_https"`
+	CertFile        string `env:"CERT_FILE" json:"cert_file"`
+	KeyFile         string `env:"KEY_FILE" json:"key_file"`
 }
 
-// GetConfig returns configuration data.
+// GetConfig returns configuration data with priority order: flags, env, config.
+// Each item takes precedence over the next item.
 func GetConfig() *Config {
 	cfg := &Config{}
-	if err := env.Parse(cfg); err != nil {
+
+	f := flags.NewFlags()
+
+	var configFile string
+	configFile, ok := os.LookupEnv("CONFIG")
+	if !ok && f.C != "" {
+		configFile = f.C
+	}
+
+	if configFile != "" {
+		err := cleanenv.ReadConfig(configFile, cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err := cleanenv.ReadEnv(cfg)
+	if err != nil {
 		log.Fatal(err)
 	}
+
+	ReadFlags(f, cfg)
 	return cfg
+}
+
+func ReadFlags(f *flags.Flags, cfg *Config) {
+	if f.A != flags.NotAvailable {
+		cfg.ServerAddress = f.A
+	}
+	if f.B != flags.NotAvailable {
+		cfg.BaseURL = f.B
+	}
+	if f.F != flags.NotAvailable {
+		cfg.FileStoragePath = f.F
+	}
+	if f.D != flags.NotAvailable {
+		cfg.DatabaseDsn = f.D
+	}
+	if f.S != flags.NotAvailable {
+		cfg.EnableHTTPS = f.S != ""
+	}
+	if f.Crt != flags.NotAvailable {
+		cfg.CertFile = f.Crt
+	}
+	if f.Key != flags.NotAvailable {
+		cfg.KeyFile = f.Key
+	}
 }
