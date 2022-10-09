@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
@@ -27,10 +32,72 @@ var (
 func main() {
 	printBuildInfo()
 
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+
 	cfg := config.GetConfig()
 
+	us := &app.URLShortener{
+		Config:         cfg,
+		Storage:        getStorage(cfg),
+		TokenGenerator: generator.NewSimple(),
+	}
+
+	server := &http.Server{
+		Addr:              cfg.ServerAddress,
+		Handler:           getRouter(us, cfg),
+		ReadHeaderTimeout: 1 * time.Second,
+	}
+
+	if err := run(cfg, server, sigCh); err != nil {
+		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	}
+}
+
+func printBuildInfo() {
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
+}
+
+func run(cfg *config.Config, server *http.Server, sigCh chan os.Signal) error {
+	httpShutdownCh := make(chan struct{})
+
+	go func() {
+		<-sigCh
+
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+
+		close(httpShutdownCh)
+	}()
+
+	log.Println("Starting HTTP server", cfg.ServerAddress)
+
 	var err error
-	var strg app.Storage = storage.NewMap()
+	if cfg.EnableHTTPS && cfg.CertFile != "" && cfg.KeyFile != "" {
+		err = server.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile)
+	} else {
+		err = server.ListenAndServe()
+	}
+
+	if err != http.ErrServerClosed {
+		return err
+	}
+
+	<-httpShutdownCh
+	fmt.Println("Server Shutdown gracefully")
+
+	return nil
+}
+
+func getStorage(cfg *config.Config) app.Storage {
+	var (
+		err  error
+		strg app.Storage = storage.NewMap()
+	)
+
 	if cfg.FileStoragePath != "" {
 		strg, err = storage.NewFile(cfg.FileStoragePath)
 		if err != nil {
@@ -44,12 +111,10 @@ func main() {
 		}
 	}
 
-	us := &app.URLShortener{
-		Config:         cfg,
-		Storage:        strg,
-		TokenGenerator: generator.NewSimple(),
-	}
+	return strg
+}
 
+func getRouter(us *app.URLShortener, cfg *config.Config) *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -92,16 +157,5 @@ func main() {
 	r.Use(middleware.Decompress)
 	r.Use(middleware.Auth(encryption.NewEncryption(cfg.CipherPass)))
 
-	//nolint
-	if cfg.EnableHTTPS && cfg.CertFile != "" && cfg.KeyFile != "" {
-		log.Fatal(http.ListenAndServeTLS(us.GetServerAddress(), cfg.CertFile, cfg.KeyFile, r))
-	} else {
-		log.Fatal(http.ListenAndServe(us.GetServerAddress(), r))
-	}
-}
-
-func printBuildInfo() {
-	fmt.Printf("Build version: %s\n", buildVersion)
-	fmt.Printf("Build date: %s\n", buildDate)
-	fmt.Printf("Build commit: %s\n", buildCommit)
+	return r
 }
