@@ -192,9 +192,10 @@ func TestGetUserURLs(t *testing.T) {
 		contentType string
 	}
 	type request struct {
-		method string
-		target string
-		userID string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
 	}
 	tests := []struct {
 		name    string
@@ -227,12 +228,30 @@ func TestGetUserURLs(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
+		{
+			name: "bad userID",
+			request: request{
+				method:        http.MethodGet,
+				target:        "/qwerty",
+				userID:        "",
+				errTypeUserID: 666,
+			},
+			want: want{
+				code:        http.StatusInternalServerError,
+				response:    "500 Internal Server Error.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			ctx := request.Context()
-			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
+			if tt.request.errTypeUserID != 0 {
+				ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.errTypeUserID)
+			} else {
+				ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
+			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

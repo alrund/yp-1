@@ -43,11 +43,12 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 		contentType string
 	}
 	type request struct {
-		method      string
-		target      string
-		userID      string
-		body        string
-		contentType string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
 	}
 	tests := []struct {
 		name    string
@@ -127,6 +128,7 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 				tt.request.method,
 				tt.request.target,
 				tt.request.userID,
+				tt.request.errTypeUserID,
 				strings.NewReader(tt.request.body),
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
@@ -168,7 +170,6 @@ func TestAddBatchJSONFail(t *testing.T) {
 		BaseURL:       "http://localhost:8080/",
 	}
 	testTokenGenerator := new(TestGenerator)
-	testToken, _ := testTokenGenerator.Generate()
 
 	preparedStorage := storage.NewMap()
 	_ = preparedStorage.Set(
@@ -183,11 +184,12 @@ func TestAddBatchJSONFail(t *testing.T) {
 		contentType string
 	}
 	type request struct {
-		method      string
-		target      string
-		userID      string
-		body        string
-		contentType string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
 	}
 	tests := []struct {
 		name    string
@@ -234,6 +236,102 @@ func TestAddBatchJSONFail(t *testing.T) {
 			},
 		},
 		{
+			name: "bad userID",
+			request: request{
+				method:        http.MethodPost,
+				target:        "/api/shorten/batch",
+				userID:        "",
+				errTypeUserID: 666,
+				body: `[
+					{
+						"correlation_id":"6d6bb7ef-78a5-49cd-a043-95233a79b54d",
+						"original_url":"http://nxcfxrjohfr8.ru/aczlc5fcm5/tnypmcukjfip"
+					},
+					{
+						"correlation_id":"591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+						"original_url":"http://rknawuufoxwpc.net/ejpjlw/qnulybd8720"
+					}
+				]`,
+				contentType: "application/json",
+			},
+			want: want{
+				code:        http.StatusInternalServerError,
+				response:    "500 Internal Server Error.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config:         testConfig,
+				Storage:        preparedStorage,
+				TokenGenerator: testTokenGenerator,
+			}
+			request := getNewRequestWithUserID(
+				tt.request.method,
+				tt.request.target,
+				tt.request.userID,
+				tt.request.errTypeUserID,
+				strings.NewReader(tt.request.body),
+			)
+			request.Header.Set("Content-type", tt.request.contentType)
+			w := httptest.NewRecorder()
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				AddBatchJSON(us, w, r)
+			})
+			h.ServeHTTP(w, request)
+			res := w.Result()
+
+			assert.Equal(t, tt.want.code, res.StatusCode)
+
+			defer res.Body.Close()
+			resBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equalf(t, tt.want.response, string(resBody), w.Body.String())
+			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
+		})
+	}
+}
+
+func TestAddBatchJSONConflict(t *testing.T) {
+	testConfig := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
+	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
+
+	preparedStorage := storage.NewMap()
+	_ = preparedStorage.Set(
+		"XXX-YYY-ZZZ",
+		"existsurl",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
+
+	type want struct {
+		code        int
+		response    string
+		contentType string
+	}
+	type request struct {
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
+	}
+	tests := []struct {
+		name    string
+		request request
+		want    want
+	}{
+		{
 			name: "conflict",
 			request: request{
 				method: http.MethodPost,
@@ -269,6 +367,7 @@ func TestAddBatchJSONFail(t *testing.T) {
 				tt.request.method,
 				tt.request.target,
 				tt.request.userID,
+				tt.request.errTypeUserID,
 				strings.NewReader(tt.request.body),
 			)
 			request.Header.Set("Content-type", tt.request.contentType)

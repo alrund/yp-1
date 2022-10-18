@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -284,7 +285,7 @@ func TestGetURLsByUserID(t *testing.T) {
 		storage *Map
 		args    args
 		want    []URLpairs
-		wantErr bool
+		wantErr *error
 	}{
 		{
 			"success",
@@ -306,10 +307,10 @@ func TestGetURLsByUserID(t *testing.T) {
 				userID: "XXX-YYY-ZZZ",
 			},
 			[]URLpairs{{ShortURL: "yyy", OriginalURL: "url"}},
-			false,
+			nil,
 		},
 		{
-			"fail",
+			"fail - incorrect userID",
 			&Map{
 				userID2tokenValue: map[string][]string{"XXX-YYY-ZZZ": {"yyy"}},
 				url2tokenValue:    map[string]string{"url": "yyy"},
@@ -328,7 +329,7 @@ func TestGetURLsByUserID(t *testing.T) {
 				userID: "BAD",
 			},
 			nil,
-			true,
+			&ErrTokenNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -337,8 +338,8 @@ func TestGetURLsByUserID(t *testing.T) {
 			if tt.want != nil {
 				assert.Equal(t, tt.want, got)
 			}
-			if tt.wantErr {
-				assert.NotNil(t, err)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, *tt.wantErr)
 			}
 		})
 	}
@@ -514,6 +515,53 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestSetBatch(t *testing.T) {
+	type args struct {
+		userID    string
+		url2token map[string]*tkn.Token
+	}
+	tests := []struct {
+		name    string
+		storage *Map
+		args    args
+		wantErr bool
+	}{
+		{
+			"success",
+			&Map{
+				userID2tokenValue:    make(map[string][]string),
+				url2tokenValue:       map[string]string{},
+				tokenValue2composite: map[string]*composite{},
+			},
+			args{
+				userID: "XXX-YYY-ZZZ",
+				url2token: map[string]*tkn.Token{
+					"url": {
+						Value:  "yyy",
+						Expire: time.Now().Add(tkn.LifeTime),
+					},
+					"url2": {
+						Value:  "yyy2",
+						Expire: time.Now().Add(tkn.LifeTime),
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.storage.SetBatch(tt.args.userID, tt.args.url2token)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+			for url, token := range tt.args.url2token {
+				assert.Equal(t, token.Value, tt.storage.url2tokenValue[url])
+			}
+		})
+	}
+}
+
 func TestRemoveTokens(t *testing.T) {
 	type args struct {
 		tokenValues []string
@@ -553,6 +601,11 @@ func TestRemoveTokens(t *testing.T) {
 			assert.True(t, token.Removed)
 		})
 	}
+}
+
+func TestPing(t *testing.T) {
+	s := &Map{}
+	assert.Nil(t, s.Ping(context.Background()))
 }
 
 func TestNewMapStorage(t *testing.T) {

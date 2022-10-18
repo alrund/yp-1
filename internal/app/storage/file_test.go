@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -72,7 +74,7 @@ func TestFileGetToken(t *testing.T) {
 		storageState string
 		args         args
 		want         string
-		wantErr      bool
+		wantErr      *error
 	}{
 		{
 			"success",
@@ -85,7 +87,7 @@ func TestFileGetToken(t *testing.T) {
 				tokenValue: "yyy",
 			},
 			"yyy",
-			false,
+			nil,
 		},
 		{
 			"fail",
@@ -98,7 +100,20 @@ func TestFileGetToken(t *testing.T) {
 				tokenValue: "zzz",
 			},
 			"",
-			true,
+			&ErrTokenNotFound,
+		},
+		{
+			"fail - no token",
+			`{
+							"url":{
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				tokenValue: "zzz",
+			},
+			"",
+			&ErrTokenNotFound,
 		},
 	}
 
@@ -113,8 +128,8 @@ func TestFileGetToken(t *testing.T) {
 				require.NotNil(t, got)
 				assert.Equal(t, tt.want, got.Value)
 			}
-			if tt.wantErr {
-				assert.NotNil(t, err)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, *tt.wantErr)
 			}
 		})
 	}
@@ -233,6 +248,64 @@ func TestFileGetTokensByUserID(t *testing.T) {
 	}
 }
 
+func TestFileGetURLsByUserID(t *testing.T) {
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name         string
+		storageState string
+		args         args
+		want         URLpairs
+		wantErr      *error
+	}{
+		{
+			"success",
+			`{
+							"url":{"Token":{"Value":"xxx","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				userID: "XXX-YYY-ZZZ",
+			},
+			URLpairs{
+				OriginalURL: "url",
+			},
+			nil,
+		},
+		{
+			"fail - incorrect userID",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				userID: "incorrect",
+			},
+			URLpairs{},
+			&ErrTokenNotFound,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData(tt.storageState)
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			urls, err := storage.GetURLsByUserID(tt.args.userID)
+			if tt.want.OriginalURL != "" {
+				require.NotNil(t, urls)
+				assert.Equal(t, tt.want.OriginalURL, urls[0].OriginalURL)
+			}
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, *tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestFileGetURL(t *testing.T) {
 	type args struct {
 		tokenValue string
@@ -242,7 +315,7 @@ func TestFileGetURL(t *testing.T) {
 		storageState string
 		args         args
 		want         string
-		wantErr      bool
+		wantErr      *error
 	}{
 		{
 			"success",
@@ -255,7 +328,7 @@ func TestFileGetURL(t *testing.T) {
 				tokenValue: "xxx",
 			},
 			"url",
-			false,
+			nil,
 		},
 		{
 			"fail",
@@ -268,7 +341,20 @@ func TestFileGetURL(t *testing.T) {
 				tokenValue: "zzz",
 			},
 			"",
-			true,
+			&ErrURLNotFound,
+		},
+		{
+			"fail - no token",
+			`{
+							"url":{
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				tokenValue: "zzz",
+			},
+			"",
+			&ErrTokenNotFound,
 		},
 	}
 	for _, tt := range tests {
@@ -282,8 +368,8 @@ func TestFileGetURL(t *testing.T) {
 				require.NotNil(t, got)
 				assert.Equal(t, tt.want, got)
 			}
-			if tt.wantErr {
-				assert.NotNil(t, err)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, *tt.wantErr)
 			}
 		})
 	}
@@ -439,6 +525,123 @@ func TestFileSet(t *testing.T) {
 	}
 }
 
+func TestFileSetBatch(t *testing.T) {
+	type args struct {
+		userID    string
+		url2token map[string]*tkn.Token
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"success",
+			args{
+				userID: "XXX-YYY-ZZZ",
+				url2token: map[string]*tkn.Token{
+					"url": {
+						Value:  "yyy",
+						Expire: time.Now().Add(tkn.LifeTime),
+					},
+					"url2": {
+						Value:  "yyy2",
+						Expire: time.Now().Add(tkn.LifeTime),
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData("")
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			err = storage.SetBatch(tt.args.userID, tt.args.url2token)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+			for url, token := range tt.args.url2token {
+				assert.NotNil(t, storage.state[url].Token)
+				assert.Equal(t, token.Value, storage.state[url].Token.Value)
+			}
+		})
+	}
+}
+
+func TestFileRemoveTokens(t *testing.T) {
+	type args struct {
+		userID      string
+		tokenValues []string
+	}
+	tests := []struct {
+		name         string
+		storageState string
+		args         args
+		want         bool
+		wantErr      bool
+	}{
+		{
+			"success",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				userID:      "XXX-YYY-ZZZ",
+				tokenValues: []string{"yyy"},
+			},
+			true,
+			false,
+		},
+		{
+			"fail - incorrect userID",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			args{
+				userID:      "incorrect",
+				tokenValues: []string{"yyy"},
+			},
+			false,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData(tt.storageState)
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			err = storage.RemoveTokens(tt.args.tokenValues, tt.args.userID)
+			if tt.wantErr {
+				require.NotNil(t, err)
+			} else {
+				assert.Nil(t, err)
+			}
+			if tt.want {
+				assert.True(t, isTestDataContainsString("\"Removed\":true"))
+			} else {
+				assert.True(t, isTestDataContainsString("\"Removed\":false"))
+			}
+		})
+	}
+}
+
+func TestFilePing(t *testing.T) {
+	createTestData("")
+	defer clearTestData()
+	storage, err := NewFile(TestStorageFileName)
+	require.NoError(t, err)
+	assert.Nil(t, storage.Ping(context.Background()))
+}
+
 func TestNewFileStorage(t *testing.T) {
 	tests := []struct {
 		name string
@@ -522,6 +725,15 @@ func createTestData(testJSON string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func isTestDataContainsString(str string) bool {
+	read, err := os.ReadFile(TestStorageFileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return strings.Contains(string(read), str)
 }
 
 func clearTestData() {

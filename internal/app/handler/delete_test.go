@@ -29,11 +29,12 @@ func TestDelete(t *testing.T) {
 		num  int
 	}
 	type request struct {
-		method      string
-		target      string
-		userID      string
-		body        string
-		contentType string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
 	}
 	tests := []struct {
 		name    string
@@ -82,6 +83,20 @@ func TestDelete(t *testing.T) {
 				num:  2,
 			},
 		},
+		{
+			name: "bad userID",
+			request: request{
+				method:        http.MethodDelete,
+				target:        "/api/user/urls",
+				userID:        "",
+				errTypeUserID: 666,
+				body:          `["xxx"]`,
+				contentType:   "application/json; charset=utf-8",
+			},
+			want: want{
+				code: http.StatusInternalServerError,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -103,7 +118,11 @@ func TestDelete(t *testing.T) {
 			request := httptest.NewRequest(tt.request.method, tt.request.target, strings.NewReader(tt.request.body))
 			request.Header.Set("Content-type", tt.request.contentType)
 			ctx := request.Context()
-			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
+			if tt.request.errTypeUserID != 0 {
+				ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.errTypeUserID)
+			} else {
+				ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
+			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -114,6 +133,9 @@ func TestDelete(t *testing.T) {
 			defer res.Body.Close()
 
 			assert.Equal(t, tt.want.code, res.StatusCode)
+			if tt.want.num == 0 {
+				return
+			}
 
 			time.Sleep(100 * time.Millisecond)
 

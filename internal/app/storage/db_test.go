@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"regexp"
 	"testing"
 	"time"
@@ -21,18 +22,16 @@ func TestDbGetToken(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"token", "expire", "removed"}).
 		AddRow("qwerty", time.Now().Add(tkn.LifeTime).Unix(), false)
-	mock.ExpectQuery("^SELECT token, expire, removed FROM tokens WHERE token = (.+)").
-		WithArgs("qwerty").
-		WillReturnRows(rows)
+	query := mock.ExpectQuery("^SELECT token, expire, removed FROM tokens WHERE token = (.+)")
+	query.WithArgs("qwerty").WillReturnRows(rows)
 
 	type args struct {
 		tokenValue string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    *tkn.Token
-		wantErr bool
+		name string
+		args args
+		want *tkn.Token
 	}{
 		{
 			"success",
@@ -43,15 +42,53 @@ func TestDbGetToken(t *testing.T) {
 				Value:   "qwerty",
 				Removed: false,
 			},
-			false,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetToken(tt.args.tokenValue)
+			require.Nil(t, err)
+			if tt.want != nil {
+				require.NotNil(t, got)
+				assert.Equal(t, tt.want.Value, got.Value)
+				assert.Equal(t, tt.want.Removed, got.Removed)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbGetTokenFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	query := mock.ExpectQuery("^SELECT token, expire, removed FROM tokens WHERE token = (.+)")
+	query.WithArgs("zzz").WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		tokenValue string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *tkn.Token
+		wantErr error
+	}{
 		{
 			"fail",
 			args{
 				tokenValue: "zzz",
 			},
 			nil,
-			true,
+			ErrTokenNotFound,
 		},
 	}
 
@@ -64,8 +101,8 @@ func TestDbGetToken(t *testing.T) {
 				assert.Equal(t, tt.want.Value, got.Value)
 				assert.Equal(t, tt.want.Removed, got.Removed)
 			}
-			if tt.wantErr {
-				assert.NotNil(t, err)
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, tt.wantErr)
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -109,14 +146,6 @@ func TestDbGetTokenByURL(t *testing.T) {
 			},
 			false,
 		},
-		{
-			"fail",
-			args{
-				url: "http://xxx.ru",
-			},
-			nil,
-			true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -130,6 +159,57 @@ func TestDbGetTokenByURL(t *testing.T) {
 			}
 			if tt.wantErr {
 				assert.NotNil(t, err)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbGetTokenByURLFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT t.token, t.expire, t.removed FROM tokens t, urls u " +
+		"WHERE u.token = t.token AND u.url = (.+)").
+		WithArgs("http://ya.ru").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *tkn.Token
+		wantErr error
+	}{
+		{
+			"fail",
+			args{
+				url: "http://ya.ru",
+			},
+			nil,
+			ErrTokenNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetTokenByURL(tt.args.url)
+			if tt.want != nil {
+				require.NotNil(t, got)
+				assert.Equal(t, tt.want.Value, got.Value)
+				assert.Equal(t, tt.want.Removed, got.Removed)
+			}
+			if tt.wantErr != nil {
+				assert.ErrorIs(t, err, ErrTokenNotFound)
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -195,6 +275,54 @@ func TestDbGetTokensByUserID(t *testing.T) {
 	}
 }
 
+func TestDbGetTokensByUserIDFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT t.token, t.expire, t.removed FROM tokens t, urls u " +
+		"WHERE u.token = t.token AND u.user_id = (.+)").
+		WithArgs("591c1645-e1bb-4f64-bf8e-7eef7e5bff94").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *tkn.Token
+		wantErr error
+	}{
+		{
+			"fail",
+			args{
+				userID: "591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+			},
+			nil,
+			ErrTokenNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetTokensByUserID(tt.args.userID)
+			if tt.want != nil {
+				assert.Equal(t, tt.want.Value, got[0].Value)
+				assert.Equal(t, tt.want.Removed, got[0].Removed)
+			}
+			assert.ErrorIs(t, err, tt.wantErr)
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
 func TestDbGetURL(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -238,6 +366,53 @@ func TestDbGetURL(t *testing.T) {
 			if tt.wantErr {
 				assert.NotNil(t, err)
 			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbGetURLFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT url FROM urls WHERE token = (.+)").
+		WithArgs("qwerty").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr error
+	}{
+		{
+			"fail",
+			args{
+				url: "qwerty",
+			},
+			"",
+			ErrURLNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetURL(tt.args.url)
+			if tt.want != "" {
+				require.NotNil(t, got)
+				assert.Equal(t, tt.want, got)
+			}
+			assert.ErrorIs(t, err, tt.wantErr)
 
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -301,6 +476,54 @@ func TestDbGetURLsByUserID(t *testing.T) {
 	}
 }
 
+func TestDbGetURLsByUserIDFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT url, token FROM urls WHERE user_id = (.+)").
+		WithArgs("591c1645-e1bb-4f64-bf8e-7eef7e5bff94").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		userID string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *URLpairs
+		wantErr error
+	}{
+		{
+			"fail",
+			args{
+				userID: "591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
+			},
+			nil,
+			ErrURLNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetURLsByUserID(tt.args.userID)
+			if tt.want != nil {
+				require.NotNil(t, got)
+				assert.Equal(t, tt.want.ShortURL, got[0].ShortURL)
+				assert.Equal(t, tt.want.OriginalURL, got[0].OriginalURL)
+			}
+			assert.ErrorIs(t, err, tt.wantErr)
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
 func TestDbHasURL(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -331,6 +554,44 @@ func TestDbHasURL(t *testing.T) {
 			true,
 			false,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.HasURL(tt.args.url)
+			assert.Equal(t, tt.want, got)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbHasURLFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT url FROM urls WHERE url = (.+)").
+		WithArgs("http://google.com").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		url string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
 		{
 			"success - false",
 			args{
@@ -387,10 +648,48 @@ func TestDbHasToken(t *testing.T) {
 			true,
 			false,
 		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.HasToken(tt.args.token)
+			assert.Equal(t, tt.want, got)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbHasTokenFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery("^SELECT token FROM tokens WHERE token = (.+)").
+		WithArgs("qwerty").
+		WillReturnError(sql.ErrNoRows)
+
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr bool
+	}{
 		{
 			"success - false",
 			args{
-				token: "xxx",
+				token: "qwerty",
 			},
 			false,
 			false,
