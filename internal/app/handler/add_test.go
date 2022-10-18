@@ -46,10 +46,11 @@ func TestAdd(t *testing.T) {
 		contentType string
 	}
 	type request struct {
-		method string
-		target string
-		userID string
-		body   string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
 	}
 	tests := []struct {
 		name    string
@@ -84,6 +85,21 @@ func TestAdd(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
+		{
+			name: "bad userID",
+			request: request{
+				method:        http.MethodPost,
+				target:        "/",
+				userID:        "",
+				errTypeUserID: 666,
+				body:          "url",
+			},
+			want: want{
+				code:        http.StatusInternalServerError,
+				response:    "500 Internal Server Error.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,6 +113,7 @@ func TestAdd(t *testing.T) {
 				tt.request.method,
 				tt.request.target,
 				tt.request.userID,
+				tt.request.errTypeUserID,
 				strings.NewReader(tt.request.body),
 			)
 			w := httptest.NewRecorder()
@@ -134,11 +151,12 @@ func TestAddJSON(t *testing.T) {
 		contentType string
 	}
 	type request struct {
-		method      string
-		target      string
-		userID      string
-		body        string
-		contentType string
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
 	}
 	tests := []struct {
 		name    string
@@ -205,6 +223,22 @@ func TestAddJSON(t *testing.T) {
 				contentType: "text/plain; charset=utf-8",
 			},
 		},
+		{
+			name: "bad userID",
+			request: request{
+				method:        http.MethodPost,
+				target:        "/api/shorten",
+				userID:        "",
+				errTypeUserID: 666,
+				body:          `{"url": "https://ya.ru"}`,
+				contentType:   "application/json; charset=utf-8",
+			},
+			want: want{
+				code:        http.StatusInternalServerError,
+				response:    "500 Internal Server Error.\n",
+				contentType: "text/plain; charset=utf-8",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -217,6 +251,7 @@ func TestAddJSON(t *testing.T) {
 				tt.request.method,
 				tt.request.target,
 				tt.request.userID,
+				tt.request.errTypeUserID,
 				strings.NewReader(tt.request.body),
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
@@ -287,9 +322,13 @@ func ExampleAddJSON() {
 	// {"result":"http://localhost:8080/oTHlXx"}
 }
 
-func getNewRequestWithUserID(method, target, userID string, body io.Reader) *http.Request {
+func getNewRequestWithUserID(method, target, userID string, errTypeUserID int, body io.Reader) *http.Request {
 	request := httptest.NewRequest(method, target, body)
 	ctx := request.Context()
-	ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
+	if errTypeUserID != 0 {
+		ctx = context.WithValue(ctx, middleware.UserIDContextKey, errTypeUserID)
+	} else {
+		ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
+	}
 	return request.WithContext(ctx)
 }
