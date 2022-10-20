@@ -138,6 +138,12 @@ func TestAdd(t *testing.T) {
 }
 
 func TestAddJSON(t *testing.T) {
+	preparedStorage := storage.NewMap()
+	_ = preparedStorage.Set(
+		"XXX-YYY-ZZZ",
+		"existsurl",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
 	testConfig := &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080/",
@@ -184,11 +190,95 @@ func TestAddJSON(t *testing.T) {
 				method:      http.MethodPost,
 				target:      "/api/shorten",
 				userID:      "XXX-YYY-ZZZ",
-				body:        `{"url": "https://ya.ru"}`,
+				body:        `{"url": "https://ya1.ru"}`,
 				contentType: "application/json",
 			},
 			want: want{
 				code:        http.StatusCreated,
+				response:    `{"result":"` + testConfig.BaseURL + testToken + `"}`,
+				contentType: "application/json; charset=utf-8",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config:         testConfig,
+				Storage:        preparedStorage,
+				TokenGenerator: testTokenGenerator,
+			}
+			request := getNewRequestWithUserID(
+				tt.request.method,
+				tt.request.target,
+				tt.request.userID,
+				tt.request.errTypeUserID,
+				strings.NewReader(tt.request.body),
+			)
+			request.Header.Set("Content-type", tt.request.contentType)
+			w := httptest.NewRecorder()
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				AddJSON(us, w, r)
+			})
+			h.ServeHTTP(w, request)
+			res := w.Result()
+
+			assert.Equal(t, tt.want.code, res.StatusCode)
+
+			defer res.Body.Close()
+			resBody, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			assert.Equalf(t, tt.want.response, string(resBody), w.Body.String())
+			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
+		})
+	}
+}
+
+func TestAddJSONFail(t *testing.T) {
+	preparedStorage := storage.NewMap()
+	_ = preparedStorage.Set(
+		"XXX-YYY-ZZZ",
+		"existsurl",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
+	testConfig := &config.Config{
+		ServerAddress: "localhost:8080",
+		BaseURL:       "http://localhost:8080/",
+	}
+	testTokenGenerator := new(TestGenerator)
+	testToken, _ := testTokenGenerator.Generate()
+
+	type want struct {
+		code        int
+		response    string
+		contentType string
+	}
+	type request struct {
+		method        string
+		target        string
+		userID        string
+		errTypeUserID int
+		body          string
+		contentType   string
+	}
+	tests := []struct {
+		name    string
+		request request
+		want    want
+	}{
+		{
+			name: "exists",
+			request: request{
+				method:      http.MethodPost,
+				target:      "/api/shorten",
+				userID:      "XXX-YYY-ZZZ",
+				body:        `{"url": "existsurl"}`,
+				contentType: "application/json; charset=utf-8",
+			},
+			want: want{
+				code:        http.StatusConflict,
 				response:    `{"result":"` + testConfig.BaseURL + testToken + `"}`,
 				contentType: "application/json; charset=utf-8",
 			},
@@ -199,7 +289,7 @@ func TestAddJSON(t *testing.T) {
 				method:      http.MethodPost,
 				target:      "/api/shorten",
 				userID:      "XXX-YYY-ZZZ",
-				body:        `{"url": "https://ya.ru"}`,
+				body:        `{"url": "https://ya2.ru"}`,
 				contentType: "text/plain; charset=utf-8",
 			},
 			want: want{
@@ -214,7 +304,7 @@ func TestAddJSON(t *testing.T) {
 				method:      http.MethodPost,
 				target:      "/api/shorten",
 				userID:      "XXX-YYY-ZZZ",
-				body:        `"url": "https://ya.ru"}`,
+				body:        `"url": "https://ya3.ru"}`,
 				contentType: "application/json; charset=utf-8",
 			},
 			want: want{
@@ -230,7 +320,7 @@ func TestAddJSON(t *testing.T) {
 				target:        "/api/shorten",
 				userID:        "",
 				errTypeUserID: 666,
-				body:          `{"url": "https://ya.ru"}`,
+				body:          `{"url": "https://ya4.ru"}`,
 				contentType:   "application/json; charset=utf-8",
 			},
 			want: want{
@@ -244,7 +334,7 @@ func TestAddJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			us := &app.URLShortener{
 				Config:         testConfig,
-				Storage:        storage.NewMap(),
+				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
 			request := getNewRequestWithUserID(
