@@ -17,6 +17,7 @@ type Config struct {
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS" json:"enable_https"`
 	CertFile        string `env:"CERT_FILE" json:"cert_file"`
 	KeyFile         string `env:"KEY_FILE" json:"key_file"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET" json:"trusted_subnet"`
 }
 
 // GetConfig returns configuration data with priority order: flags, env, config.
@@ -69,5 +70,8 @@ func ReadFlags(f *flags.Flags, cfg *Config) {
 	}
 	if f.Key != flags.NotAvailable {
 		cfg.KeyFile = f.Key
+	}
+	if f.T != flags.NotAvailable {
+		cfg.TrustedSubnet = f.T
 	}
 }

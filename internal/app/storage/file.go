@@ -31,6 +31,34 @@ func NewFile(fileName string) (*File, error) {
 	return file, nil
 }
 
+func (s *File) GetURLCount() (int, error) {
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
+
+	urls := make(map[string]struct{})
+	for _, composite := range s.state {
+		if _, ok := urls[composite.URL]; !ok {
+			urls[composite.URL] = struct{}{}
+		}
+	}
+
+	return len(urls), nil
+}
+
+func (s *File) GetUserIDCount() (int, error) {
+	s.stateMx.RLock()
+	defer s.stateMx.RUnlock()
+
+	userIDs := make(map[string]struct{})
+	for _, composite := range s.state {
+		if _, ok := userIDs[composite.UserID]; !ok {
+			userIDs[composite.UserID] = struct{}{}
+		}
+	}
+
+	return len(userIDs), nil
+}
+
 func (s *File) Set(userID string, url string, token *tkn.Token) error {
 	s.stateMx.Lock()
 	defer s.stateMx.Unlock()
