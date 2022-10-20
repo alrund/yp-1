@@ -5,5 +5,6 @@
   "database_dsn": "",
   "enable_https": true,
   "cert_file": "",
-  "key_file": ""
+  "key_file": "",
+  "trusted_subnet": ""
 }

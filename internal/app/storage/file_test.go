@@ -642,6 +642,74 @@ func TestFilePing(t *testing.T) {
 	assert.Nil(t, storage.Ping(context.Background()))
 }
 
+func TestFileGetURLCount(t *testing.T) {
+	tests := []struct {
+		name         string
+		storageState string
+		want         int
+	}{
+		{
+			"success - empty",
+			`{}`,
+			0,
+		},
+		{
+			"success - two",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData(tt.storageState)
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			num, err := storage.GetURLCount()
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, num)
+		})
+	}
+}
+
+func TestFileGetUserIDCount(t *testing.T) {
+	tests := []struct {
+		name         string
+		storageState string
+		want         int
+	}{
+		{
+			"success - empty",
+			`{}`,
+			0,
+		},
+		{
+			"success - two",
+			`{
+							"url":{"Token":{"Value":"yyy","Expire":"2022-06-13T20:45:35.857891406+03:00"},
+							"URL":"url",
+							"UserID":"XXX-YYY-ZZZ"}
+						}`,
+			1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			createTestData(tt.storageState)
+			defer clearTestData()
+			storage, err := NewFile(TestStorageFileName)
+			require.NoError(t, err)
+			num, err := storage.GetUserIDCount()
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, num)
+		})
+	}
+}
+
 func TestNewFileStorage(t *testing.T) {
 	tests := []struct {
 		name string

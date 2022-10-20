@@ -145,6 +145,10 @@ func getRouter(us *app.URLShortener, cfg *config.Config) *mux.Router {
 		handler.DeleteURLs(us, w, r)
 	}).Methods(http.MethodDelete)
 
+	r.HandleFunc("/api/internal/stats", func(w http.ResponseWriter, r *http.Request) {
+		handler.Stats(us, w, r)
+	}).Methods(http.MethodGet)
+
 	subRouter := r.PathPrefix("/debug/pprof").Subrouter()
 	subRouter.HandleFunc("/", pprof.Index)
 	subRouter.HandleFunc("/cmdline", pprof.Cmdline)

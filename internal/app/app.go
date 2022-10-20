@@ -23,6 +23,8 @@ type Storage interface {
 	HasToken(tokenValue string) (bool, error)
 	Ping(ctx context.Context) error
 	RemoveTokens(tokenValues []string, userID string) error
+	GetURLCount() (int, error)
+	GetUserIDCount() (int, error)
 }
 
 // URLShortener url shortening application.
@@ -30,6 +32,10 @@ type URLShortener struct {
 	Config *config.Config
 	Storage
 	TokenGenerator tkn.Generator
+}
+
+type Stat struct {
+	Urls, Users int
 }
 
 // GetConfig returns configuration data.
@@ -148,4 +154,17 @@ func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLpairs, error) {
 	}
 
 	return URLPairs, nil
+}
+
+func (us *URLShortener) GetStats() (*Stat, error) {
+	urlCount, err := us.GetURLCount()
+	if err != nil {
+		return nil, err
+	}
+	userCount, err := us.GetUserIDCount()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Stat{Urls: urlCount, Users: userCount}, nil
 }

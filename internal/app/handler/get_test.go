@@ -7,72 +7,21 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/helper"
 	"github.com/alrund/yp-1/internal/app/middleware"
-	"github.com/alrund/yp-1/internal/app/storage"
-	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/alrund/yp-1/internal/app/token/generator"
 	"github.com/stretchr/testify/assert"
 )
 
-type Storage struct{}
-
-func (st *Storage) HasToken(tokenValue string) (bool, error) {
-	switch tokenValue {
-	case "qwerty":
-		return true, nil
-	case "expired":
-		return true, nil
-	case "removed":
-		return true, nil
-	}
-	return false, nil
-}
-
-func (st *Storage) GetToken(tokenValue string) (*tkn.Token, error) {
-	switch tokenValue {
-	case "expired":
-		return &tkn.Token{Value: "expired", Expire: time.Now().Add(-tkn.LifeTime)}, nil
-	case "removed":
-		return &tkn.Token{Value: "removed", Expire: time.Now().Add(tkn.LifeTime), Removed: true}, nil
-	default:
-		return &tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)}, nil
-	}
-}
-
-func (st *Storage) GetURLsByUserID(userID string) ([]storage.URLpairs, error) {
-	switch userID {
-	case "empty":
-		return nil, storage.ErrTokenNotFound
-	default:
-		return []storage.URLpairs{
-			{
-				OriginalURL: "url",
-				ShortURL:    "shorturl",
-			},
-		}, nil
-	}
-}
-
-func (st *Storage) GetURL(string) (string, error)                                 { return "https://ya.ru", nil }
-func (st *Storage) GetTokensByUserID(string) ([]*tkn.Token, error)                { return nil, nil }
-func (st *Storage) GetTokenByURL(string) (*tkn.Token, error)                      { return nil, nil }
-func (st *Storage) HasURL(string) (bool, error)                                   { return true, nil }
-func (st *Storage) Set(string, string, *tkn.Token) error                          { return nil }
-func (st *Storage) SetBatch(userID string, url2token map[string]*tkn.Token) error { return nil }
-func (st *Storage) Ping(ctx context.Context) error                                { return nil }
-func (st *Storage) RemoveTokens(tokenValues []string, userID string) error        { return nil }
-
-var us2 = &app.URLShortener{
+var usGet = &app.URLShortener{
 	Config: &config.Config{
 		ServerAddress: "localhost:8080",
 		BaseURL:       "http://localhost:8080/",
 	},
-	Storage:        new(Storage),
+	Storage:        new(TestStorage),
 	TokenGenerator: generator.NewSimple(),
 }
 
@@ -166,7 +115,7 @@ func TestGet(t *testing.T) {
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Get(us2, w, r)
+				Get(usGet, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()
@@ -255,7 +204,7 @@ func TestGetUserURLs(t *testing.T) {
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				GetUserURLs(us2, w, r)
+				GetUserURLs(usGet, w, r)
 			})
 			h.ServeHTTP(w, request)
 			res := w.Result()

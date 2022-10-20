@@ -23,6 +23,14 @@ func NewMap() *Map {
 	}
 }
 
+func (s *Map) GetURLCount() (int, error) {
+	return len(s.url2tokenValue), nil
+}
+
+func (s *Map) GetUserIDCount() (int, error) {
+	return len(s.userID2tokenValue), nil
+}
+
 func (s *Map) Set(userID, url string, token *tkn.Token) error {
 	s.mx.Lock()
 	_, ok := s.userID2tokenValue[userID]

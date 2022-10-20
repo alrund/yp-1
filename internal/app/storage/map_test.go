@@ -608,6 +608,74 @@ func TestPing(t *testing.T) {
 	assert.Nil(t, s.Ping(context.Background()))
 }
 
+func TestGetURLCount(t *testing.T) {
+	tests := []struct {
+		name    string
+		storage *Map
+		want    int
+	}{
+		{
+			"success - empty",
+			&Map{
+				userID2tokenValue:    map[string][]string{},
+				url2tokenValue:       map[string]string{},
+				tokenValue2composite: map[string]*composite{},
+			},
+			0,
+		},
+		{
+			"success - two",
+			&Map{
+				userID2tokenValue:    map[string][]string{},
+				url2tokenValue:       map[string]string{"http://link.ru": "xxx", "http://link2.ru": "zzz"},
+				tokenValue2composite: map[string]*composite{},
+			},
+			2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			num, err := tt.storage.GetURLCount()
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, num)
+		})
+	}
+}
+
+func TestGetUserIDCount(t *testing.T) {
+	tests := []struct {
+		name    string
+		storage *Map
+		want    int
+	}{
+		{
+			"success - empty",
+			&Map{
+				userID2tokenValue:    map[string][]string{},
+				url2tokenValue:       map[string]string{},
+				tokenValue2composite: map[string]*composite{},
+			},
+			0,
+		},
+		{
+			"success - two",
+			&Map{
+				userID2tokenValue:    map[string][]string{"XXX-YYY-ZZZ": {"xxx"}, "XXX-YYY-ZZZ2": {"xxx2"}},
+				url2tokenValue:       map[string]string{},
+				tokenValue2composite: map[string]*composite{},
+			},
+			2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			num, err := tt.storage.GetUserIDCount()
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, num)
+		})
+	}
+}
+
 func TestNewMapStorage(t *testing.T) {
 	tests := []struct {
 		name string

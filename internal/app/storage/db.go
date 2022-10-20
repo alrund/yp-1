@@ -69,6 +69,32 @@ func (d *DB) migrations() error {
 	return tx.Commit()
 }
 
+func (d *DB) GetURLCount() (int, error) {
+	var num int
+	err := d.db.QueryRow("SELECT count(DISTINCT token) as num FROM url").Scan(&num)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return num, nil
+}
+
+func (d *DB) GetUserIDCount() (int, error) {
+	var num int
+	err := d.db.QueryRow("SELECT count(DISTINCT user_id) as num FROM url").Scan(&num)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return num, nil
+}
+
 func (d *DB) Set(userID, url string, token *tkn.Token) error {
 	tx, err := d.db.Begin()
 	if err != nil {

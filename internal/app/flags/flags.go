@@ -13,6 +13,7 @@ type Flags struct {
 	S   string
 	Crt string
 	Key string
+	T   string
 }
 
 func NewFlags() *Flags {
@@ -26,6 +27,7 @@ func NewFlags() *Flags {
 	flag.StringVar(&flags.S, "s", NotAvailable, "Использовать HTTPS")
 	flag.StringVar(&flags.Crt, "crt", NotAvailable, "Файл с сертификатом")
 	flag.StringVar(&flags.Key, "key", NotAvailable, "Файл с приватным ключом")
+	flag.StringVar(&flags.T, "t", NotAvailable, "Доверенная подсеть (CIDR)")
 	flag.Parse()
 
 	return flags
