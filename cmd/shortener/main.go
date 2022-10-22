@@ -3,14 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net/http"
-	"net/http/pprof"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/encryption"
@@ -18,7 +10,19 @@ import (
 	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	"github.com/alrund/yp-1/internal/app/token/generator"
+	pb "github.com/alrund/yp-1/internal/proto"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"log"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 const defaultBuildValue string = "N/A"
@@ -49,9 +53,31 @@ func main() {
 		ReadHeaderTimeout: 1 * time.Second,
 	}
 
-	if err := run(cfg, server, sigCh); err != nil {
-		log.Fatalf("HTTP server ListenAndServe: %v", err)
-	}
+	closeBothCh := make(chan struct{})
+
+	go func() {
+		<-sigCh
+		close(closeBothCh)
+	}()
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		if err := run(cfg, server, closeBothCh); err != nil {
+			log.Fatalf("HTTP server ListenAndServe: %v", err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if err := runGRPC(us, cfg, closeBothCh); err != nil {
+			log.Fatalf("GRPC server ListenAndServe: %v", err)
+		}
+	}()
+
+	wg.Wait()
 }
 
 func printBuildInfo() {
@@ -60,11 +86,11 @@ func printBuildInfo() {
 	fmt.Printf("Build commit: %s\n", buildCommit)
 }
 
-func run(cfg *config.Config, server *http.Server, sigCh chan os.Signal) error {
+func run(cfg *config.Config, server *http.Server, closeBothCh chan struct{}) error {
 	httpShutdownCh := make(chan struct{})
 
 	go func() {
-		<-sigCh
+		<-closeBothCh
 
 		if err := server.Shutdown(context.Background()); err != nil {
 			log.Printf("HTTP server Shutdown: %v", err)
@@ -87,7 +113,53 @@ func run(cfg *config.Config, server *http.Server, sigCh chan os.Signal) error {
 	}
 
 	<-httpShutdownCh
-	fmt.Println("Server Shutdown gracefully")
+	fmt.Println("HTTP Server Shutdown gracefully")
+
+	return nil
+}
+
+func runGRPC(us *app.URLShortener, cfg *config.Config, closeBothCh chan struct{}) error {
+	var (
+		err        error
+		serverGRPC *grpc.Server
+	)
+
+	if cfg.EnableHTTPS && cfg.CertFile != "" && cfg.KeyFile != "" {
+		creds, err := credentials.NewServerTLSFromFile(cfg.CertFile, cfg.KeyFile)
+		if err != nil {
+			return err
+		}
+		serverGRPC = grpc.NewServer(grpc.Creds(creds))
+	} else {
+		serverGRPC = grpc.NewServer()
+	}
+
+	pb.RegisterAppServer(serverGRPC, app.NewGRPCServer(us))
+
+	grpcShutdownCh := make(chan struct{})
+
+	go func() {
+		<-closeBothCh
+
+		serverGRPC.GracefulStop()
+
+		close(grpcShutdownCh)
+	}()
+
+	log.Println("Starting GRPC server", cfg.GrpcServerAddress)
+
+	listen, err := net.Listen("tcp", cfg.GrpcServerAddress)
+	if err != nil {
+		return err
+	}
+
+	err = serverGRPC.Serve(listen)
+	if err != nil {
+		return err
+	}
+
+	<-grpcShutdownCh
+	fmt.Println("GRPC server Shutdown gracefully")
 
 	return nil
 }

@@ -1,0 +1,110 @@
+syntax = "proto3";
+
+package app;
+
+option go_package = "app/proto";
+
+message AddRequest {
+  string user_id = 1;
+  string url = 2;
+}
+
+message AddResponse {
+  string error = 1;
+  int32 error_code = 2;
+  string short_url = 3;
+}
+
+message AddJsonRequest {
+  string user_id = 1;
+  string url_json = 2;
+}
+
+message AddJsonResponse {
+  string error = 1;
+  int32 error_code = 2;
+  string short_url_json = 3;
+}
+
+message AddBatchRequest {
+  message Url {
+    string correlation_id = 1;
+    string original_url = 2;
+  }
+  string user_id = 1;
+  repeated Url urls = 2;
+}
+
+message AddBatchResponse {
+  string error = 1;
+  int32 error_code = 2;
+  message Url {
+    string correlation_id = 1;
+    string short_url = 2;
+  }
+  repeated Url short_urls = 3;
+}
+
+message PingRequest {}
+
+message PingResponse {
+  string error = 1;
+  int32 error_code = 2;
+}
+
+message GetRequest {
+  string token = 1;
+}
+
+message GetResponse {
+  string error = 1;
+  int32 error_code = 2;
+  string url = 3;
+}
+
+message GetUserURLsRequest {
+  string user_id = 1;
+}
+
+message GetUserURLsResponse {
+  string error = 1;
+  int32 error_code = 2;
+  message Url {
+    string original_url = 1;
+    string short_url = 2;
+  }
+  repeated Url urls = 3;
+}
+
+message DeleteURLsgRequest {
+  string user_id = 1;
+}
+
+message DeleteURLsResponse {
+  string error = 1;
+  int32 error_code = 2;
+  message Token {
+    string value = 1;
+  }
+  repeated Token tokens = 3;
+}
+
+message StatsRequest {}
+
+message StatsResponse {
+  string error = 1;
+  int32 error_code = 2;
+  int32 urls = 3;
+  int32 users = 4;
+}
+
+service App {
+  rpc Add(AddRequest) returns (AddResponse);
+  rpc AddJson(AddJsonRequest) returns (AddJsonResponse);
+  rpc AddBatch(AddBatchRequest) returns (AddBatchResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc GetUserURLs(GetUserURLsRequest) returns (GetUserURLsResponse);
+  rpc DeleteURLs(DeleteURLsgRequest) returns (DeleteURLsResponse);
+  rpc Stats(StatsRequest) returns (StatsResponse);
+}
