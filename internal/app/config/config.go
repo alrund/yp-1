@@ -12,7 +12,6 @@ type Config struct {
 	ServerAddress     string `env:"SERVER_ADDRESS" env-default:"localhost:8080" json:"server_address"`
 	BaseURL           string `env:"BASE_URL" env-default:"http://localhost:8080/" json:"base_url"`
 	GrpcServerAddress string `env:"GRPC_SERVER_ADDRESS" env-default:"localhost:9090" json:"grpc_server_address"`
-	GrpcBaseURL       string `env:"GRPC_BASE_URL" env-default:"http://localhost:9090/" json:"grpc_base_url"`
 	FileStoragePath   string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
 	DatabaseDsn       string `env:"DATABASE_DSN" json:"database_dsn"` // postgres://dev:dev@localhost:5432/dev
 	CipherPass        string `env:"CIPHER_PASSWORD" env-default:"J53RPX6" json:"-"`
@@ -54,6 +53,9 @@ func GetConfig() *Config {
 func ReadFlags(f *flags.Flags, cfg *Config) {
 	if f.A != flags.NotAvailable {
 		cfg.ServerAddress = f.A
+	}
+	if f.GA != flags.NotAvailable {
+		cfg.GrpcServerAddress = f.GA
 	}
 	if f.B != flags.NotAvailable {
 		cfg.BaseURL = f.B
