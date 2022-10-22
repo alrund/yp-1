@@ -125,9 +125,7 @@ func TestDelete(t *testing.T) {
 			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				DeleteURLs(us2, w, r)
-			})
+			h := http.HandlerFunc(DeleteURLs(us2))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 			defer res.Body.Close()

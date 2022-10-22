@@ -125,9 +125,7 @@ func TestStats(t *testing.T) {
 				TokenGenerator: generator.NewSimple(),
 			}
 
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Stats(usStats, w, r)
-			})
+			h := http.HandlerFunc(Stats(usStats))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 

@@ -2,6 +2,10 @@ package grpcserver
 
 import (
 	"context"
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/storage"
@@ -11,9 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func TestAdd(t *testing.T) {

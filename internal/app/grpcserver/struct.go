@@ -2,12 +2,13 @@ package grpcserver
 
 import (
 	"context"
+	"log"
+	"net"
+
 	"github.com/alrund/yp-1/internal/app"
 	pb "github.com/alrund/yp-1/internal/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
-	"log"
-	"net"
 )
 
 const bufSize = 1024 * 1024

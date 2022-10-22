@@ -117,9 +117,7 @@ func TestAdd(t *testing.T) {
 				strings.NewReader(tt.request.body),
 			)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Add(us, w, r)
-			})
+			h := http.HandlerFunc(Add(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -216,9 +214,7 @@ func TestAddJSON(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddJSON(us, w, r)
-			})
+			h := http.HandlerFunc(AddJSON(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -346,9 +342,7 @@ func TestAddJSONFail(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddJSON(us, w, r)
-			})
+			h := http.HandlerFunc(AddJSON(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 

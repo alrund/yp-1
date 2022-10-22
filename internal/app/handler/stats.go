@@ -15,48 +15,51 @@ type Counter interface {
 }
 
 // Stats get statistic information.
-func Stats(us Counter, w http.ResponseWriter, r *http.Request) {
-	cfg := us.GetConfig()
-	if cfg.TrustedSubnet == "" {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return
-	}
+func Stats(us Counter) func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		cfg := us.GetConfig()
+		if cfg.TrustedSubnet == "" {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
 
-	_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	realIPHeader := r.Header.Get("X-Real-IP")
-	if realIPHeader == "" {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return
-	}
+		realIPHeader := r.Header.Get("X-Real-IP")
+		if realIPHeader == "" {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
 
-	realIP := net.ParseIP(realIPHeader)
+		realIP := net.ParseIP(realIPHeader)
 
-	if !ipnet.Contains(realIP) {
-		http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-		return
-	}
+		if !ipnet.Contains(realIP) {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
 
-	stat, err := us.GetStats()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		stat, err := us.GetStats()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	result, err := json.Marshal(stat)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		result, err := json.Marshal(stat)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_, err = w.Write(result)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_, err = w.Write(result)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
+	return fn
 }
