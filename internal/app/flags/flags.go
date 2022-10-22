@@ -14,6 +14,7 @@ type Flags struct {
 	Crt string
 	Key string
 	T   string
+	GA  string
 }
 
 func NewFlags() *Flags {
@@ -21,6 +22,7 @@ func NewFlags() *Flags {
 
 	flag.StringVar(&flags.C, "c", "", "Файл конфигурации")
 	flag.StringVar(&flags.A, "a", NotAvailable, "Адрес запуска HTTP-сервера")
+	flag.StringVar(&flags.GA, "ga", NotAvailable, "Адрес запуска GRPC-сервера")
 	flag.StringVar(&flags.B, "b", NotAvailable, "Базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&flags.F, "f", NotAvailable, "Путь до файла с сокращёнными URL")
 	flag.StringVar(&flags.D, "d", NotAvailable, "Строка с адресом подключения к БД")

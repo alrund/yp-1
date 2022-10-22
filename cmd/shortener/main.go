@@ -6,6 +6,7 @@ import (
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/encryption"
+	"github.com/alrund/yp-1/internal/app/grpcserver"
 	"github.com/alrund/yp-1/internal/app/handler"
 	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
@@ -134,7 +135,7 @@ func runGRPC(us *app.URLShortener, cfg *config.Config, closeBothCh chan struct{}
 		serverGRPC = grpc.NewServer()
 	}
 
-	pb.RegisterAppServer(serverGRPC, app.NewGRPCServer(us))
+	pb.RegisterAppServer(serverGRPC, grpcserver.New(us))
 
 	grpcShutdownCh := make(chan struct{})
 
