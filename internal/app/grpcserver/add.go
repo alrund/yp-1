@@ -1,4 +1,4 @@
-package app
+package grpcserver
 
 import (
 	"context"
@@ -8,17 +8,9 @@ import (
 	"net/http"
 )
 
-type GRPCServer struct {
-	pb.UnimplementedAppServer
-	us *URLShortener
-}
-
-func NewGRPCServer(us *URLShortener) *GRPCServer {
-	return &GRPCServer{us: us}
-}
-
-func (s *GRPCServer) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddResponse, error) {
+func (s *Server) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddResponse, error) {
 	var response pb.AddResponse
+	response.ErrorCode = http.StatusCreated
 
 	token, err := s.us.Add(in.UserId, in.Url)
 	if err != nil {
@@ -30,7 +22,7 @@ func (s *GRPCServer) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddRespons
 		response.ErrorCode = http.StatusConflict
 	}
 
-	response.ShortUrl = token.Value
+	response.ShortUrl = s.us.GetBaseURL() + token.Value
 
 	return &response, nil
 }
