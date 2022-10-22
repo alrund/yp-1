@@ -114,9 +114,7 @@ func TestGet(t *testing.T) {
 			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				Get(usGet, w, r)
-			})
+			h := http.HandlerFunc(Get(usGet))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -203,9 +201,7 @@ func TestGetUserURLs(t *testing.T) {
 			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				GetUserURLs(usGet, w, r)
-			})
+			h := http.HandlerFunc(GetUserURLs(usGet))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 

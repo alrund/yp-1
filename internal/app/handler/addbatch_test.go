@@ -133,9 +133,7 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddBatchJSON(us, w, r)
-			})
+			h := http.HandlerFunc(AddBatchJSON(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -278,9 +276,7 @@ func TestAddBatchJSONFail(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddBatchJSON(us, w, r)
-			})
+			h := http.HandlerFunc(AddBatchJSON(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -372,9 +368,7 @@ func TestAddBatchJSONConflict(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				AddBatchJSON(us, w, r)
-			})
+			h := http.HandlerFunc(AddBatchJSON(us))
 			h.ServeHTTP(w, request)
 			res := w.Result()
 

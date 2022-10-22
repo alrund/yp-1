@@ -3,9 +3,10 @@ package grpcserver
 import (
 	"context"
 	"errors"
+	"net/http"
+
 	"github.com/alrund/yp-1/internal/app/storage"
 	pb "github.com/alrund/yp-1/internal/proto"
-	"net/http"
 )
 
 func (s *Server) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddResponse, error) {

@@ -3,6 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/encryption"
@@ -15,15 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"log"
-	"net"
-	"net/http"
-	"net/http/pprof"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 )
 
 const defaultBuildValue string = "N/A"
@@ -48,14 +49,7 @@ func main() {
 		TokenGenerator: generator.NewSimple(),
 	}
 
-	server := &http.Server{
-		Addr:              cfg.ServerAddress,
-		Handler:           getRouter(us, cfg),
-		ReadHeaderTimeout: 1 * time.Second,
-	}
-
 	closeBothCh := make(chan struct{})
-
 	go func() {
 		<-sigCh
 		close(closeBothCh)
@@ -66,14 +60,14 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		if err := run(cfg, server, closeBothCh); err != nil {
+		if err := run(us, closeBothCh); err != nil {
 			log.Fatalf("HTTP server ListenAndServe: %v", err)
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		if err := runGRPC(us, cfg, closeBothCh); err != nil {
+		if err := runGRPC(us, closeBothCh); err != nil {
 			log.Fatalf("GRPC server ListenAndServe: %v", err)
 		}
 	}()
@@ -87,8 +81,16 @@ func printBuildInfo() {
 	fmt.Printf("Build commit: %s\n", buildCommit)
 }
 
-func run(cfg *config.Config, server *http.Server, closeBothCh chan struct{}) error {
+func run(us *app.URLShortener, closeBothCh chan struct{}) error {
 	httpShutdownCh := make(chan struct{})
+
+	cfg := us.Config
+
+	server := &http.Server{
+		Addr:              cfg.ServerAddress,
+		Handler:           getRouter(us, cfg),
+		ReadHeaderTimeout: 1 * time.Second,
+	}
 
 	go func() {
 		<-closeBothCh
@@ -119,10 +121,11 @@ func run(cfg *config.Config, server *http.Server, closeBothCh chan struct{}) err
 	return nil
 }
 
-func runGRPC(us *app.URLShortener, cfg *config.Config, closeBothCh chan struct{}) error {
+func runGRPC(us *app.URLShortener, closeBothCh chan struct{}) error {
 	var (
 		err        error
 		serverGRPC *grpc.Server
+		cfg        = us.Config
 	)
 
 	if cfg.EnableHTTPS && cfg.CertFile != "" && cfg.KeyFile != "" {
@@ -190,37 +193,14 @@ func getStorage(cfg *config.Config) app.Storage {
 func getRouter(us *app.URLShortener, cfg *config.Config) *mux.Router {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.Add(us, w, r)
-	}).Methods(http.MethodPost)
-
-	r.HandleFunc("/api/shorten", func(w http.ResponseWriter, r *http.Request) {
-		handler.AddJSON(us, w, r)
-	}).Methods(http.MethodPost)
-
-	r.HandleFunc("/api/shorten/batch", func(w http.ResponseWriter, r *http.Request) {
-		handler.AddBatchJSON(us, w, r)
-	}).Methods(http.MethodPost)
-
-	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		handler.Ping(us, w, r)
-	}).Methods(http.MethodGet)
-
-	r.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.Get(us, w, r)
-	}).Methods(http.MethodGet)
-
-	r.HandleFunc("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetUserURLs(us, w, r)
-	}).Methods(http.MethodGet)
-
-	r.HandleFunc("/api/user/urls", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteURLs(us, w, r)
-	}).Methods(http.MethodDelete)
-
-	r.HandleFunc("/api/internal/stats", func(w http.ResponseWriter, r *http.Request) {
-		handler.Stats(us, w, r)
-	}).Methods(http.MethodGet)
+	r.HandleFunc("/", handler.Add(us)).Methods(http.MethodPost)
+	r.HandleFunc("/api/shorten", handler.AddJSON(us)).Methods(http.MethodPost)
+	r.HandleFunc("/api/shorten/batch", handler.AddBatchJSON(us)).Methods(http.MethodPost)
+	r.HandleFunc("/ping", handler.Ping(us)).Methods(http.MethodGet)
+	r.HandleFunc("/{id}", handler.Get(us)).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/urls", handler.GetUserURLs(us)).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/urls", handler.DeleteURLs(us)).Methods(http.MethodDelete)
+	r.HandleFunc("/api/internal/stats", handler.Stats(us)).Methods(http.MethodGet)
 
 	subRouter := r.PathPrefix("/debug/pprof").Subrouter()
 	subRouter.HandleFunc("/", pprof.Index)
