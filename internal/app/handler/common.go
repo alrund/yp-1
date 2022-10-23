@@ -2,8 +2,12 @@ package handler
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"time"
 
+	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 )
@@ -57,3 +61,14 @@ func (st *TestStorage) Ping(ctx context.Context) error                          
 func (st *TestStorage) RemoveTokens(tokenValues []string, userID string) error        { return nil }
 func (st *TestStorage) GetURLCount() (int, error)                                     { return 2, nil }
 func (st *TestStorage) GetUserIDCount() (int, error)                                  { return 3, nil }
+
+func getNewRequestWithUserID(method, target, userID string, errTypeUserID int, body io.Reader) *http.Request {
+	request := httptest.NewRequest(method, target, body)
+	ctx := request.Context()
+	if errTypeUserID != 0 {
+		ctx = context.WithValue(ctx, middleware.UserIDContextKey, errTypeUserID)
+	} else {
+		ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
+	}
+	return request.WithContext(ctx)
+}

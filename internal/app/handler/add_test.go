@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
-	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	"github.com/stretchr/testify/assert"
@@ -404,15 +402,4 @@ func ExampleAddJSON() {
 
 	fmt.Println(string(buf))
 	// {"result":"http://localhost:8080/oTHlXx"}
-}
-
-func getNewRequestWithUserID(method, target, userID string, errTypeUserID int, body io.Reader) *http.Request {
-	request := httptest.NewRequest(method, target, body)
-	ctx := request.Context()
-	if errTypeUserID != 0 {
-		ctx = context.WithValue(ctx, middleware.UserIDContextKey, errTypeUserID)
-	} else {
-		ctx = context.WithValue(ctx, middleware.UserIDContextKey, userID)
-	}
-	return request.WithContext(ctx)
 }
