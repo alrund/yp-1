@@ -8,6 +8,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/encryption"
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	pb "github.com/alrund/yp-1/internal/proto"
@@ -21,6 +22,7 @@ func TestAdd(t *testing.T) {
 	testConfig := &config.Config{
 		GrpcServerAddress: "localhost:9090",
 		BaseURL:           "http://localhost:8080/",
+		CipherPass:        "PASS",
 	}
 	testStorage := storage.NewMap()
 	_ = testStorage.Set(
@@ -30,6 +32,7 @@ func TestAdd(t *testing.T) {
 	)
 	testTokenGenerator := new(TestGenerator)
 	testToken, _ := testTokenGenerator.Generate()
+	testEncryptor := encryption.NewEncryption(testConfig.CipherPass)
 
 	us := &app.URLShortener{
 		Config:         testConfig,
@@ -49,14 +52,21 @@ func TestAdd(t *testing.T) {
 	defer conn.Close()
 	client := pb.NewAppClient(conn)
 
+	type request struct {
+		userID  string
+		request *pb.AddRequest
+	}
 	tests := []struct {
 		name    string
-		request *pb.AddRequest
+		request *request
 		want    *pb.AddResponse
 	}{
 		{
-			name:    "success",
-			request: &pb.AddRequest{UserId: "XXX-YYY-ZZZ", Url: "http://ya.ru"},
+			name: "success",
+			request: &request{
+				userID:  "XXX-YYY-ZZZ",
+				request: &pb.AddRequest{Url: "http://ya.ru"},
+			},
 			want: &pb.AddResponse{
 				Error:     "",
 				ErrorCode: http.StatusCreated,
@@ -64,8 +74,11 @@ func TestAdd(t *testing.T) {
 			},
 		},
 		{
-			name:    "exists",
-			request: &pb.AddRequest{UserId: "XXX-YYY-ZZZ", Url: "existsurl"},
+			name: "exists",
+			request: &request{
+				userID:  "XXX-YYY-ZZZ",
+				request: &pb.AddRequest{Url: "existsurl"},
+			},
 			want: &pb.AddResponse{
 				Error:     "",
 				ErrorCode: http.StatusConflict,
@@ -75,7 +88,7 @@ func TestAdd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := client.Add(context.Background(), tt.request)
+			resp, err := client.Add(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
 			assert.Equal(t, tt.want.Error, resp.Error)

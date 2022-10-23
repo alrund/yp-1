@@ -3,13 +3,14 @@ package grpcserver
 import (
 	"context"
 	"errors"
-	"github.com/alrund/yp-1/internal/app/token"
 	"net/http"
 
 	"github.com/alrund/yp-1/internal/app/storage"
+	"github.com/alrund/yp-1/internal/app/token"
 	pb "github.com/alrund/yp-1/internal/proto"
 )
 
+// Get returns a URL by token.
 func (s *Server) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, error) {
 	var response pb.GetResponse
 

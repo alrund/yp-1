@@ -128,14 +128,16 @@ func runGRPC(us *app.URLShortener, closeBothCh chan struct{}) error {
 		cfg        = us.Config
 	)
 
+	enc := encryption.NewEncryption(cfg.CipherPass)
+
 	if cfg.EnableHTTPS && cfg.CertFile != "" && cfg.KeyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(cfg.CertFile, cfg.KeyFile)
 		if err != nil {
 			return err
 		}
-		serverGRPC = grpc.NewServer(grpc.Creds(creds))
+		serverGRPC = grpc.NewServer(grpc.Creds(creds), grpc.UnaryInterceptor(grpcserver.AuthInterceptor(enc)))
 	} else {
-		serverGRPC = grpc.NewServer()
+		serverGRPC = grpc.NewServer(grpc.UnaryInterceptor(grpcserver.AuthInterceptor(enc)))
 	}
 
 	pb.RegisterAppServer(serverGRPC, grpcserver.New(us))
