@@ -71,18 +71,21 @@ message GetUserURLsResponse {
   repeated Url urls = 3;
 }
 
-message DeleteURLsgRequest {}
+message DeleteURLsRequest {
+  message Token {
+    string value = 1;
+  }
+  repeated Token tokens = 1;
+}
 
 message DeleteURLsResponse {
   string error = 1;
   int32 error_code = 2;
-  message Token {
-    string value = 1;
-  }
-  repeated Token tokens = 3;
 }
 
-message StatsRequest {}
+message StatsRequest {
+  string XRealIP = 1;
+}
 
 message StatsResponse {
   string error = 1;
@@ -98,6 +101,6 @@ service App {
   rpc Ping(PingRequest) returns (PingResponse);
   rpc Get(GetRequest) returns (GetResponse);
   rpc GetUserURLs(GetUserURLsRequest) returns (GetUserURLsResponse);
-  rpc DeleteURLs(DeleteURLsgRequest) returns (DeleteURLsResponse);
+  rpc DeleteURLs(DeleteURLsRequest) returns (DeleteURLsResponse);
   rpc Stats(StatsRequest) returns (StatsResponse);
 }

@@ -28,7 +28,7 @@ type AppClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	GetUserURLs(ctx context.Context, in *GetUserURLsRequest, opts ...grpc.CallOption) (*GetUserURLsResponse, error)
-	DeleteURLs(ctx context.Context, in *DeleteURLsgRequest, opts ...grpc.CallOption) (*DeleteURLsResponse, error)
+	DeleteURLs(ctx context.Context, in *DeleteURLsRequest, opts ...grpc.CallOption) (*DeleteURLsResponse, error)
 	Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsResponse, error)
 }
 
@@ -94,7 +94,7 @@ func (c *appClient) GetUserURLs(ctx context.Context, in *GetUserURLsRequest, opt
 	return out, nil
 }
 
-func (c *appClient) DeleteURLs(ctx context.Context, in *DeleteURLsgRequest, opts ...grpc.CallOption) (*DeleteURLsResponse, error) {
+func (c *appClient) DeleteURLs(ctx context.Context, in *DeleteURLsRequest, opts ...grpc.CallOption) (*DeleteURLsResponse, error) {
 	out := new(DeleteURLsResponse)
 	err := c.cc.Invoke(ctx, "/app.App/DeleteURLs", in, out, opts...)
 	if err != nil {
@@ -122,7 +122,7 @@ type AppServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	GetUserURLs(context.Context, *GetUserURLsRequest) (*GetUserURLsResponse, error)
-	DeleteURLs(context.Context, *DeleteURLsgRequest) (*DeleteURLsResponse, error)
+	DeleteURLs(context.Context, *DeleteURLsRequest) (*DeleteURLsResponse, error)
 	Stats(context.Context, *StatsRequest) (*StatsResponse, error)
 	mustEmbedUnimplementedAppServer()
 }
@@ -149,7 +149,7 @@ func (UnimplementedAppServer) Get(context.Context, *GetRequest) (*GetResponse, e
 func (UnimplementedAppServer) GetUserURLs(context.Context, *GetUserURLsRequest) (*GetUserURLsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserURLs not implemented")
 }
-func (UnimplementedAppServer) DeleteURLs(context.Context, *DeleteURLsgRequest) (*DeleteURLsResponse, error) {
+func (UnimplementedAppServer) DeleteURLs(context.Context, *DeleteURLsRequest) (*DeleteURLsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteURLs not implemented")
 }
 func (UnimplementedAppServer) Stats(context.Context, *StatsRequest) (*StatsResponse, error) {
@@ -277,7 +277,7 @@ func _App_GetUserURLs_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _App_DeleteURLs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteURLsgRequest)
+	in := new(DeleteURLsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -289,7 +289,7 @@ func _App_DeleteURLs_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: "/app.App/DeleteURLs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppServer).DeleteURLs(ctx, req.(*DeleteURLsgRequest))
+		return srv.(AppServer).DeleteURLs(ctx, req.(*DeleteURLsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
