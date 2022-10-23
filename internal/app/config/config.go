@@ -10,8 +10,8 @@ import (
 
 type Config struct {
 	ServerAddress     string `env:"SERVER_ADDRESS" env-default:"localhost:8080" json:"server_address"`
-	BaseURL           string `env:"BASE_URL" env-default:"http://localhost:8080/" json:"base_url"`
 	GrpcServerAddress string `env:"GRPC_SERVER_ADDRESS" env-default:"localhost:9090" json:"grpc_server_address"`
+	BaseURL           string `env:"BASE_URL" env-default:"http://localhost:8080/" json:"base_url"`
 	FileStoragePath   string `env:"FILE_STORAGE_PATH" json:"file_storage_path"`
 	DatabaseDsn       string `env:"DATABASE_DSN" json:"database_dsn"` // postgres://dev:dev@localhost:5432/dev
 	CipherPass        string `env:"CIPHER_PASSWORD" env-default:"J53RPX6" json:"-"`
