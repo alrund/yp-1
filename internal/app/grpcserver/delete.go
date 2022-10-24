@@ -14,8 +14,8 @@ func (s *Server) DeleteURLs(ctx context.Context, in *pb.DeleteURLsRequest) (*pb.
 	contextUserID := ctx.Value(UserIDContextKey)
 	userID, ok := contextUserID.(string)
 	if !ok {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, nil
 	}
 
@@ -28,8 +28,8 @@ func (s *Server) DeleteURLs(ctx context.Context, in *pb.DeleteURLsRequest) (*pb.
 		_ = s.us.RemoveTokens(tokens, userID)
 	}()
 
-	response.ErrorCode = http.StatusAccepted
-	response.Error = http.StatusText(http.StatusAccepted)
+	response.Code = http.StatusAccepted
+	response.Message = http.StatusText(http.StatusAccepted)
 
 	return &response, nil
 }

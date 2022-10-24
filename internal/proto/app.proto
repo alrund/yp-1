@@ -9,8 +9,8 @@ message AddRequest {
 }
 
 message AddResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   string short_url = 3;
 }
 
@@ -19,8 +19,8 @@ message AddJSONRequest {
 }
 
 message AddJSONResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   string short_url_json = 3;
 }
 
@@ -33,8 +33,8 @@ message AddBatchRequest {
 }
 
 message AddBatchResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   message Url {
     string correlation_id = 1;
     string short_url = 2;
@@ -45,8 +45,8 @@ message AddBatchResponse {
 message PingRequest {}
 
 message PingResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
 }
 
 message GetRequest {
@@ -54,16 +54,16 @@ message GetRequest {
 }
 
 message GetResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   string url = 3;
 }
 
 message GetUserURLsRequest {}
 
 message GetUserURLsResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   message Url {
     string original_url = 1;
     string short_url = 2;
@@ -79,8 +79,8 @@ message DeleteURLsRequest {
 }
 
 message DeleteURLsResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
 }
 
 message StatsRequest {
@@ -88,8 +88,8 @@ message StatsRequest {
 }
 
 message StatsResponse {
-  string error = 1;
-  int32 error_code = 2;
+  string message = 1;
+  int32 code = 2;
   int32 urls = 3;
   int32 users = 4;
 }

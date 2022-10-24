@@ -46,10 +46,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.192.1"},
 			want: &pb.StatsResponse{
-				Error:     http.StatusText(http.StatusOK),
-				ErrorCode: http.StatusOK,
-				Users:     1,
-				Urls:      2,
+				Message: http.StatusText(http.StatusOK),
+				Code:    http.StatusOK,
+				Users:   1,
+				Urls:    2,
 			},
 		},
 		{
@@ -61,10 +61,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.192.1"},
 			want: &pb.StatsResponse{
-				Error:     http.StatusText(http.StatusForbidden),
-				ErrorCode: http.StatusForbidden,
-				Users:     0,
-				Urls:      0,
+				Message: http.StatusText(http.StatusForbidden),
+				Code:    http.StatusForbidden,
+				Users:   0,
+				Urls:    0,
 			},
 		},
 		{
@@ -76,10 +76,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: ""},
 			want: &pb.StatsResponse{
-				Error:     http.StatusText(http.StatusForbidden),
-				ErrorCode: http.StatusForbidden,
-				Users:     0,
-				Urls:      0,
+				Message: http.StatusText(http.StatusForbidden),
+				Code:    http.StatusForbidden,
+				Users:   0,
+				Urls:    0,
 			},
 		},
 		{
@@ -91,10 +91,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.100.1"},
 			want: &pb.StatsResponse{
-				Error:     http.StatusText(http.StatusForbidden),
-				ErrorCode: http.StatusForbidden,
-				Users:     0,
-				Urls:      0,
+				Message: http.StatusText(http.StatusForbidden),
+				Code:    http.StatusForbidden,
+				Users:   0,
+				Urls:    0,
 			},
 		},
 	}
@@ -121,8 +121,8 @@ func TestStats(t *testing.T) {
 			resp, err := client.Stats(context.Background(), tt.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.Users, resp.Users)
 			assert.Equal(t, tt.want.Urls, resp.Urls)
 		})

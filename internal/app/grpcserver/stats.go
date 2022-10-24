@@ -14,41 +14,41 @@ func (s *Server) Stats(ctx context.Context, in *pb.StatsRequest) (*pb.StatsRespo
 
 	cfg := s.us.GetConfig()
 	if cfg.TrustedSubnet == "" {
-		response.ErrorCode = http.StatusForbidden
-		response.Error = http.StatusText(http.StatusForbidden)
+		response.Code = http.StatusForbidden
+		response.Message = http.StatusText(http.StatusForbidden)
 		return &response, nil
 	}
 
 	_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
 	if err != nil {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, err
 	}
 
 	if in.XRealIP == "" {
-		response.ErrorCode = http.StatusForbidden
-		response.Error = http.StatusText(http.StatusForbidden)
+		response.Code = http.StatusForbidden
+		response.Message = http.StatusText(http.StatusForbidden)
 		return &response, nil
 	}
 
 	realIP := net.ParseIP(in.XRealIP)
 
 	if !ipnet.Contains(realIP) {
-		response.ErrorCode = http.StatusForbidden
-		response.Error = http.StatusText(http.StatusForbidden)
+		response.Code = http.StatusForbidden
+		response.Message = http.StatusText(http.StatusForbidden)
 		return &response, nil
 	}
 
 	stat, err := s.us.GetStats()
 	if err != nil {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, err
 	}
 
-	response.ErrorCode = http.StatusOK
-	response.Error = http.StatusText(http.StatusOK)
+	response.Code = http.StatusOK
+	response.Message = http.StatusText(http.StatusOK)
 	response.Users = int32(stat.Users)
 	response.Urls = int32(stat.Urls)
 

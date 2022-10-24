@@ -81,8 +81,8 @@ func TestAddBatchSuccess(t *testing.T) {
 				},
 			},
 			want: &pb.AddBatchResponse{
-				Error:     "",
-				ErrorCode: http.StatusCreated,
+				Message: "",
+				Code:    http.StatusCreated,
 				ShortUrls: []*pb.AddBatchResponse_Url{
 					{
 						CorrelationId: "591c1645-e1bb-4f64-bf8e-7eef7e5bff94",
@@ -104,8 +104,8 @@ func TestAddBatchSuccess(t *testing.T) {
 			sort.Sort(ByCorrelationID(tt.want.ShortUrls))
 			sort.Sort(ByCorrelationID(resp.ShortUrls))
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.ShortUrls, resp.ShortUrls)
 		})
 	}
@@ -168,8 +168,8 @@ func TestAddBatchFail(t *testing.T) {
 				},
 			},
 			want: &pb.AddBatchResponse{
-				Error:     "",
-				ErrorCode: http.StatusConflict,
+				Message: "",
+				Code:    http.StatusConflict,
 				ShortUrls: []*pb.AddBatchResponse_Url{
 					{
 						CorrelationId: "6d6bb7ef-78a5-49cd-a043-95233a79b54d",
@@ -187,8 +187,8 @@ func TestAddBatchFail(t *testing.T) {
 			sort.Sort(ByCorrelationID(tt.want.ShortUrls))
 			sort.Sort(ByCorrelationID(resp.ShortUrls))
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.ShortUrls, resp.ShortUrls)
 		})
 	}

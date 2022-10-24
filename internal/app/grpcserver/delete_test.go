@@ -49,8 +49,8 @@ func TestDeleteURLs(t *testing.T) {
 			},
 			want: want{
 				response: &pb.DeleteURLsResponse{
-					Error:     http.StatusText(http.StatusAccepted),
-					ErrorCode: http.StatusAccepted,
+					Message: http.StatusText(http.StatusAccepted),
+					Code:    http.StatusAccepted,
 				},
 				num: 1,
 			},
@@ -63,8 +63,8 @@ func TestDeleteURLs(t *testing.T) {
 			},
 			want: want{
 				response: &pb.DeleteURLsResponse{
-					Error:     http.StatusText(http.StatusAccepted),
-					ErrorCode: http.StatusAccepted,
+					Message: http.StatusText(http.StatusAccepted),
+					Code:    http.StatusAccepted,
 				},
 				num: 0,
 			},
@@ -103,8 +103,8 @@ func TestDeleteURLs(t *testing.T) {
 			resp, err := client.DeleteURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.response.Error, resp.Error)
-			assert.Equal(t, tt.want.response.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.response.Message, resp.Message)
+			assert.Equal(t, tt.want.response.Code, resp.Code)
 
 			if tt.want.num == 0 {
 				return
