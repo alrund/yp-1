@@ -8,6 +8,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
+	"github.com/alrund/yp-1/internal/app/encryption"
 	"github.com/alrund/yp-1/internal/app/storage"
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	pb "github.com/alrund/yp-1/internal/proto"
@@ -116,6 +117,90 @@ func TestGet(t *testing.T) {
 			assert.Equal(t, tt.want.Error, resp.Error)
 			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
 			assert.Equal(t, tt.want.Url, resp.Url)
+		})
+	}
+}
+
+func TestGetUserURLs(t *testing.T) {
+	testConfig := &config.Config{
+		GrpcServerAddress: "localhost:9090",
+		BaseURL:           "http://localhost:8080/",
+		CipherPass:        "PASS",
+	}
+	testStorage := storage.NewMap()
+	_ = testStorage.Set(
+		"XXX-YYY-ZZZ",
+		"https://ya.ru",
+		&tkn.Token{Value: "qwerty", Expire: time.Now().Add(tkn.LifeTime)},
+	)
+	testTokenGenerator := new(TestGenerator)
+	testEncryptor := encryption.NewEncryption(testConfig.CipherPass)
+
+	us := &app.URLShortener{
+		Config:         testConfig,
+		Storage:        testStorage,
+		TokenGenerator: testTokenGenerator,
+	}
+
+	conn, err := grpc.DialContext(
+		context.Background(),
+		testConfig.GrpcServerAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithContextDialer(dialer(us)),
+	)
+	if err != nil {
+		t.Fatalf("Failed to dial bufnet: %v", err)
+	}
+	defer conn.Close()
+	client := pb.NewAppClient(conn)
+
+	type request struct {
+		userID  string
+		request *pb.GetUserURLsRequest
+	}
+	tests := []struct {
+		name    string
+		request request
+		want    *pb.GetUserURLsResponse
+	}{
+		{
+			name: "success",
+			request: request{
+				userID:  "XXX-YYY-ZZZ",
+				request: &pb.GetUserURLsRequest{},
+			},
+			want: &pb.GetUserURLsResponse{
+				Error:     http.StatusText(http.StatusOK),
+				ErrorCode: http.StatusOK,
+				Urls: []*pb.GetUserURLsResponse_Url{
+					{
+						OriginalUrl: "https://ya.ru",
+						ShortUrl:    "http://localhost:8080/qwerty",
+					},
+				},
+			},
+		},
+		{
+			name: "notfound",
+			request: request{
+				userID:  "not-XXX-YYY-ZZZ",
+				request: &pb.GetUserURLsRequest{},
+			},
+			want: &pb.GetUserURLsResponse{
+				Error:     http.StatusText(http.StatusNoContent),
+				ErrorCode: http.StatusNoContent,
+				Urls:      []*pb.GetUserURLsResponse_Url(nil),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp, err := client.GetUserURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
+			require.Nil(t, err)
+
+			assert.Equal(t, tt.want.Error, resp.Error)
+			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Urls, resp.Urls)
 		})
 	}
 }
