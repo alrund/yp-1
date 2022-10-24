@@ -49,8 +49,8 @@ func TestPing(t *testing.T) {
 			name:    "success",
 			request: &pb.PingRequest{},
 			want: &pb.PingResponse{
-				Error:     http.StatusText(http.StatusOK),
-				ErrorCode: http.StatusOK,
+				Message: http.StatusText(http.StatusOK),
+				Code:    http.StatusOK,
 			},
 		},
 	}
@@ -59,8 +59,8 @@ func TestPing(t *testing.T) {
 			resp, err := client.Ping(context.Background(), tt.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 		})
 	}
 }

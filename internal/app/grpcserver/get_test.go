@@ -67,45 +67,45 @@ func TestGet(t *testing.T) {
 			name:    "success",
 			request: &pb.GetRequest{Token: "qwerty"},
 			want: &pb.GetResponse{
-				Error:     http.StatusText(http.StatusTemporaryRedirect),
-				ErrorCode: http.StatusTemporaryRedirect,
-				Url:       "https://ya.ru",
+				Message: http.StatusText(http.StatusTemporaryRedirect),
+				Code:    http.StatusTemporaryRedirect,
+				Url:     "https://ya.ru",
 			},
 		},
 		{
 			name:    "notfound",
 			request: &pb.GetRequest{Token: "notfound"},
 			want: &pb.GetResponse{
-				Error:     http.StatusText(http.StatusNotFound),
-				ErrorCode: http.StatusNotFound,
-				Url:       "",
+				Message: http.StatusText(http.StatusNotFound),
+				Code:    http.StatusNotFound,
+				Url:     "",
 			},
 		},
 		{
 			name:    "expired",
 			request: &pb.GetRequest{Token: "expired"},
 			want: &pb.GetResponse{
-				Error:     "498 Invalid Token.",
-				ErrorCode: 498,
-				Url:       "",
+				Message: "498 Invalid Token.",
+				Code:    498,
+				Url:     "",
 			},
 		},
 		{
 			name:    "removed",
 			request: &pb.GetRequest{Token: "removed"},
 			want: &pb.GetResponse{
-				Error:     http.StatusText(http.StatusGone),
-				ErrorCode: http.StatusGone,
-				Url:       "",
+				Message: http.StatusText(http.StatusGone),
+				Code:    http.StatusGone,
+				Url:     "",
 			},
 		},
 		{
 			name:    "badrequest",
 			request: &pb.GetRequest{Token: ""},
 			want: &pb.GetResponse{
-				Error:     http.StatusText(http.StatusBadRequest),
-				ErrorCode: http.StatusBadRequest,
-				Url:       "",
+				Message: http.StatusText(http.StatusBadRequest),
+				Code:    http.StatusBadRequest,
+				Url:     "",
 			},
 		},
 	}
@@ -114,8 +114,8 @@ func TestGet(t *testing.T) {
 			resp, err := client.Get(context.Background(), tt.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.Url, resp.Url)
 		})
 	}
@@ -170,8 +170,8 @@ func TestGetUserURLs(t *testing.T) {
 				request: &pb.GetUserURLsRequest{},
 			},
 			want: &pb.GetUserURLsResponse{
-				Error:     http.StatusText(http.StatusOK),
-				ErrorCode: http.StatusOK,
+				Message: http.StatusText(http.StatusOK),
+				Code:    http.StatusOK,
 				Urls: []*pb.GetUserURLsResponse_Url{
 					{
 						OriginalUrl: "https://ya.ru",
@@ -187,9 +187,9 @@ func TestGetUserURLs(t *testing.T) {
 				request: &pb.GetUserURLsRequest{},
 			},
 			want: &pb.GetUserURLsResponse{
-				Error:     http.StatusText(http.StatusNoContent),
-				ErrorCode: http.StatusNoContent,
-				Urls:      []*pb.GetUserURLsResponse_Url(nil),
+				Message: http.StatusText(http.StatusNoContent),
+				Code:    http.StatusNoContent,
+				Urls:    []*pb.GetUserURLsResponse_Url(nil),
 			},
 		},
 	}
@@ -198,8 +198,8 @@ func TestGetUserURLs(t *testing.T) {
 			resp, err := client.GetUserURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.Urls, resp.Urls)
 		})
 	}

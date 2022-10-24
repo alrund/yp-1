@@ -15,38 +15,38 @@ func (s *Server) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, e
 	var response pb.GetResponse
 
 	if in.Token == "" {
-		response.ErrorCode = http.StatusBadRequest
-		response.Error = http.StatusText(http.StatusBadRequest)
+		response.Code = http.StatusBadRequest
+		response.Message = http.StatusText(http.StatusBadRequest)
 		return &response, nil
 	}
 
 	url, err := s.us.Get(in.Token)
 	if err != nil {
 		if errors.Is(err, storage.ErrTokenNotFound) {
-			response.ErrorCode = http.StatusNotFound
-			response.Error = http.StatusText(http.StatusNotFound)
+			response.Code = http.StatusNotFound
+			response.Message = http.StatusText(http.StatusNotFound)
 			return &response, nil
 		}
 
 		if errors.Is(err, token.ErrTokenExpiredError) {
-			response.ErrorCode = 498
-			response.Error = "498 Invalid Token."
+			response.Code = 498
+			response.Message = "498 Invalid Token."
 			return &response, nil
 		}
 
 		if errors.Is(err, token.ErrTokenRemovedError) {
-			response.ErrorCode = http.StatusGone
-			response.Error = http.StatusText(http.StatusGone)
+			response.Code = http.StatusGone
+			response.Message = http.StatusText(http.StatusGone)
 			return &response, nil
 		}
 
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, nil
 	}
 
-	response.ErrorCode = http.StatusTemporaryRedirect
-	response.Error = http.StatusText(http.StatusTemporaryRedirect)
+	response.Code = http.StatusTemporaryRedirect
+	response.Message = http.StatusText(http.StatusTemporaryRedirect)
 	response.Url = url
 
 	return &response, nil
@@ -59,21 +59,21 @@ func (s *Server) GetUserURLs(ctx context.Context, in *pb.GetUserURLsRequest) (*p
 	contextUserID := ctx.Value(UserIDContextKey)
 	userID, ok := contextUserID.(string)
 	if !ok {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, nil
 	}
 
 	urls, err := s.us.GetUserURLs(userID)
 	if err != nil {
 		if errors.Is(err, storage.ErrTokenNotFound) {
-			response.ErrorCode = http.StatusNoContent
-			response.Error = http.StatusText(http.StatusNoContent)
+			response.Code = http.StatusNoContent
+			response.Message = http.StatusText(http.StatusNoContent)
 			return &response, nil
 		}
 
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, nil
 	}
 
@@ -83,8 +83,8 @@ func (s *Server) GetUserURLs(ctx context.Context, in *pb.GetUserURLsRequest) (*p
 			ShortUrl:    url.ShortURL,
 		})
 	}
-	response.ErrorCode = http.StatusOK
-	response.Error = http.StatusText(http.StatusOK)
+	response.Code = http.StatusOK
+	response.Message = http.StatusText(http.StatusOK)
 
 	return &response, nil
 }

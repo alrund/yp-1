@@ -12,12 +12,12 @@ func (s *Server) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse
 	var response pb.PingResponse
 
 	if err := s.us.Ping(ctx); err != nil {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, err
 	}
 
-	response.ErrorCode = http.StatusOK
-	response.Error = http.StatusText(http.StatusOK)
+	response.Code = http.StatusOK
+	response.Message = http.StatusText(http.StatusOK)
 	return &response, nil
 }

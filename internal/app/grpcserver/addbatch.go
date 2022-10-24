@@ -12,13 +12,13 @@ import (
 // AddBatch adds multiple URLs at once for shortening.
 func (s *Server) AddBatch(ctx context.Context, in *pb.AddBatchRequest) (*pb.AddBatchResponse, error) {
 	var response pb.AddBatchResponse
-	response.ErrorCode = http.StatusCreated
+	response.Code = http.StatusCreated
 
 	contextUserID := ctx.Value(UserIDContextKey)
 	userID, ok := contextUserID.(string)
 	if !ok {
-		response.ErrorCode = http.StatusInternalServerError
-		response.Error = http.StatusText(http.StatusInternalServerError)
+		response.Code = http.StatusInternalServerError
+		response.Message = http.StatusText(http.StatusInternalServerError)
 		return &response, nil
 	}
 
@@ -26,18 +26,18 @@ func (s *Server) AddBatch(ctx context.Context, in *pb.AddBatchRequest) (*pb.AddB
 	tokens, err := s.us.AddBatch(userID, URLs)
 	if err != nil {
 		if !errors.Is(err, storage.ErrURLAlreadyExists) {
-			response.ErrorCode = http.StatusInternalServerError
-			response.Error = err.Error()
+			response.Code = http.StatusInternalServerError
+			response.Message = err.Error()
 			return &response, nil
 		}
-		response.ErrorCode = http.StatusConflict
+		response.Code = http.StatusConflict
 	}
 
 	for URL, token := range tokens {
 		row, ok := URL2Row[URL]
 		if !ok {
-			response.ErrorCode = http.StatusInternalServerError
-			response.Error = "URL not found in URL2Row map"
+			response.Code = http.StatusInternalServerError
+			response.Message = "URL not found in URL2Row map"
 			return &response, nil
 		}
 		response.ShortUrls = append(response.ShortUrls, &pb.AddBatchResponse_Url{

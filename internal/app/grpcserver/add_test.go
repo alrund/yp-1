@@ -68,9 +68,9 @@ func TestAdd(t *testing.T) {
 				request: &pb.AddRequest{Url: "http://ya.ru"},
 			},
 			want: &pb.AddResponse{
-				Error:     "",
-				ErrorCode: http.StatusCreated,
-				ShortUrl:  testConfig.BaseURL + testToken,
+				Message:  "",
+				Code:     http.StatusCreated,
+				ShortUrl: testConfig.BaseURL + testToken,
 			},
 		},
 		{
@@ -80,9 +80,9 @@ func TestAdd(t *testing.T) {
 				request: &pb.AddRequest{Url: "existsurl"},
 			},
 			want: &pb.AddResponse{
-				Error:     "",
-				ErrorCode: http.StatusConflict,
-				ShortUrl:  testConfig.BaseURL + testToken,
+				Message:  "",
+				Code:     http.StatusConflict,
+				ShortUrl: testConfig.BaseURL + testToken,
 			},
 		},
 	}
@@ -91,8 +91,8 @@ func TestAdd(t *testing.T) {
 			resp, err := client.Add(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.ShortUrl, resp.ShortUrl)
 		})
 	}
@@ -148,8 +148,8 @@ func TestAddJSON(t *testing.T) {
 				request: &pb.AddJSONRequest{UrlJson: `{"url": "https://ya.ru"}`},
 			},
 			want: &pb.AddJSONResponse{
-				Error:        "",
-				ErrorCode:    http.StatusCreated,
+				Message:      "",
+				Code:         http.StatusCreated,
 				ShortUrlJson: `{"result":"` + testConfig.BaseURL + testToken + `"}`,
 			},
 		},
@@ -160,8 +160,8 @@ func TestAddJSON(t *testing.T) {
 				request: &pb.AddJSONRequest{UrlJson: `{"url": "existsurl"}`},
 			},
 			want: &pb.AddJSONResponse{
-				Error:        "",
-				ErrorCode:    http.StatusConflict,
+				Message:      "",
+				Code:         http.StatusConflict,
 				ShortUrlJson: `{"result":"` + testConfig.BaseURL + testToken + `"}`,
 			},
 		},
@@ -171,8 +171,8 @@ func TestAddJSON(t *testing.T) {
 			resp, err := client.AddJSON(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Error, resp.Error)
-			assert.Equal(t, tt.want.ErrorCode, resp.ErrorCode)
+			assert.Equal(t, tt.want.Message, resp.Message)
+			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.ShortUrlJson, resp.ShortUrlJson)
 		})
 	}
