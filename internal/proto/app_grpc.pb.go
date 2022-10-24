@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AppClient interface {
 	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddResponse, error)
-	AddJson(ctx context.Context, in *AddJsonRequest, opts ...grpc.CallOption) (*AddJsonResponse, error)
+	AddJSON(ctx context.Context, in *AddJSONRequest, opts ...grpc.CallOption) (*AddJSONResponse, error)
 	AddBatch(ctx context.Context, in *AddBatchRequest, opts ...grpc.CallOption) (*AddBatchResponse, error)
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
@@ -49,9 +49,9 @@ func (c *appClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOp
 	return out, nil
 }
 
-func (c *appClient) AddJson(ctx context.Context, in *AddJsonRequest, opts ...grpc.CallOption) (*AddJsonResponse, error) {
-	out := new(AddJsonResponse)
-	err := c.cc.Invoke(ctx, "/app.App/AddJson", in, out, opts...)
+func (c *appClient) AddJSON(ctx context.Context, in *AddJSONRequest, opts ...grpc.CallOption) (*AddJSONResponse, error) {
+	out := new(AddJSONResponse)
+	err := c.cc.Invoke(ctx, "/app.App/AddJSON", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (c *appClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.Ca
 // for forward compatibility
 type AppServer interface {
 	Add(context.Context, *AddRequest) (*AddResponse, error)
-	AddJson(context.Context, *AddJsonRequest) (*AddJsonResponse, error)
+	AddJSON(context.Context, *AddJSONRequest) (*AddJSONResponse, error)
 	AddBatch(context.Context, *AddBatchRequest) (*AddBatchResponse, error)
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
@@ -134,8 +134,8 @@ type UnimplementedAppServer struct {
 func (UnimplementedAppServer) Add(context.Context, *AddRequest) (*AddResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
 }
-func (UnimplementedAppServer) AddJson(context.Context, *AddJsonRequest) (*AddJsonResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddJson not implemented")
+func (UnimplementedAppServer) AddJSON(context.Context, *AddJSONRequest) (*AddJSONResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddJSON not implemented")
 }
 func (UnimplementedAppServer) AddBatch(context.Context, *AddBatchRequest) (*AddBatchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBatch not implemented")
@@ -186,20 +186,20 @@ func _App_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _App_AddJson_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddJsonRequest)
+func _App_AddJSON_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddJSONRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AppServer).AddJson(ctx, in)
+		return srv.(AppServer).AddJSON(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/app.App/AddJson",
+		FullMethod: "/app.App/AddJSON",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppServer).AddJson(ctx, req.(*AddJsonRequest))
+		return srv.(AppServer).AddJSON(ctx, req.(*AddJSONRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -324,8 +324,8 @@ var App_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _App_Add_Handler,
 		},
 		{
-			MethodName: "AddJson",
-			Handler:    _App_AddJson_Handler,
+			MethodName: "AddJSON",
+			Handler:    _App_AddJSON_Handler,
 		},
 		{
 			MethodName: "AddBatch",

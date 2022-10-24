@@ -14,11 +14,11 @@ message AddResponse {
   string short_url = 3;
 }
 
-message AddJsonRequest {
+message AddJSONRequest {
   string url_json = 1;
 }
 
-message AddJsonResponse {
+message AddJSONResponse {
   string error = 1;
   int32 error_code = 2;
   string short_url_json = 3;
@@ -96,7 +96,7 @@ message StatsResponse {
 
 service App {
   rpc Add(AddRequest) returns (AddResponse);
-  rpc AddJson(AddJsonRequest) returns (AddJsonResponse);
+  rpc AddJSON(AddJSONRequest) returns (AddJSONResponse);
   rpc AddBatch(AddBatchRequest) returns (AddBatchResponse);
   rpc Ping(PingRequest) returns (PingResponse);
   rpc Get(GetRequest) returns (GetResponse);

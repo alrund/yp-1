@@ -51,3 +51,40 @@ func (s *Server) Get(ctx context.Context, in *pb.GetRequest) (*pb.GetResponse, e
 
 	return &response, nil
 }
+
+// GetUserURLs returns a URL by user ID.
+func (s *Server) GetUserURLs(ctx context.Context, in *pb.GetUserURLsRequest) (*pb.GetUserURLsResponse, error) {
+	var response pb.GetUserURLsResponse
+
+	contextUserID := ctx.Value(UserIDContextKey)
+	userID, ok := contextUserID.(string)
+	if !ok {
+		response.ErrorCode = http.StatusInternalServerError
+		response.Error = http.StatusText(http.StatusInternalServerError)
+		return &response, nil
+	}
+
+	urls, err := s.us.GetUserURLs(userID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTokenNotFound) {
+			response.ErrorCode = http.StatusNoContent
+			response.Error = http.StatusText(http.StatusNoContent)
+			return &response, nil
+		}
+
+		response.ErrorCode = http.StatusInternalServerError
+		response.Error = http.StatusText(http.StatusInternalServerError)
+		return &response, nil
+	}
+
+	for _, url := range urls {
+		response.Urls = append(response.Urls, &pb.GetUserURLsResponse_Url{
+			OriginalUrl: url.OriginalURL,
+			ShortUrl:    url.ShortURL,
+		})
+	}
+	response.ErrorCode = http.StatusOK
+	response.Error = http.StatusText(http.StatusOK)
+
+	return &response, nil
+}

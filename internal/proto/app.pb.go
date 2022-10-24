@@ -130,7 +130,7 @@ func (x *AddResponse) GetShortUrl() string {
 	return ""
 }
 
-type AddJsonRequest struct {
+type AddJSONRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -138,8 +138,8 @@ type AddJsonRequest struct {
 	UrlJson string `protobuf:"bytes,1,opt,name=url_json,json=urlJson,proto3" json:"url_json,omitempty"`
 }
 
-func (x *AddJsonRequest) Reset() {
-	*x = AddJsonRequest{}
+func (x *AddJSONRequest) Reset() {
+	*x = AddJSONRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_app_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -147,13 +147,13 @@ func (x *AddJsonRequest) Reset() {
 	}
 }
 
-func (x *AddJsonRequest) String() string {
+func (x *AddJSONRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AddJsonRequest) ProtoMessage() {}
+func (*AddJSONRequest) ProtoMessage() {}
 
-func (x *AddJsonRequest) ProtoReflect() protoreflect.Message {
+func (x *AddJSONRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -165,19 +165,19 @@ func (x *AddJsonRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AddJsonRequest.ProtoReflect.Descriptor instead.
-func (*AddJsonRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AddJSONRequest.ProtoReflect.Descriptor instead.
+func (*AddJSONRequest) Descriptor() ([]byte, []int) {
 	return file_app_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AddJsonRequest) GetUrlJson() string {
+func (x *AddJSONRequest) GetUrlJson() string {
 	if x != nil {
 		return x.UrlJson
 	}
 	return ""
 }
 
-type AddJsonResponse struct {
+type AddJSONResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -187,8 +187,8 @@ type AddJsonResponse struct {
 	ShortUrlJson string `protobuf:"bytes,3,opt,name=short_url_json,json=shortUrlJson,proto3" json:"short_url_json,omitempty"`
 }
 
-func (x *AddJsonResponse) Reset() {
-	*x = AddJsonResponse{}
+func (x *AddJSONResponse) Reset() {
+	*x = AddJSONResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_app_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -196,13 +196,13 @@ func (x *AddJsonResponse) Reset() {
 	}
 }
 
-func (x *AddJsonResponse) String() string {
+func (x *AddJSONResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AddJsonResponse) ProtoMessage() {}
+func (*AddJSONResponse) ProtoMessage() {}
 
-func (x *AddJsonResponse) ProtoReflect() protoreflect.Message {
+func (x *AddJSONResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_app_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -214,26 +214,26 @@ func (x *AddJsonResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AddJsonResponse.ProtoReflect.Descriptor instead.
-func (*AddJsonResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use AddJSONResponse.ProtoReflect.Descriptor instead.
+func (*AddJSONResponse) Descriptor() ([]byte, []int) {
 	return file_app_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *AddJsonResponse) GetError() string {
+func (x *AddJSONResponse) GetError() string {
 	if x != nil {
 		return x.Error
 	}
 	return ""
 }
 
-func (x *AddJsonResponse) GetErrorCode() int32 {
+func (x *AddJSONResponse) GetErrorCode() int32 {
 	if x != nil {
 		return x.ErrorCode
 	}
 	return 0
 }
 
-func (x *AddJsonResponse) GetShortUrlJson() string {
+func (x *AddJSONResponse) GetShortUrlJson() string {
 	if x != nil {
 		return x.ShortUrlJson
 	}
@@ -1098,10 +1098,10 @@ var file_app_proto_rawDesc = []byte{
 	0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x65, 0x72, 0x72, 0x6f, 0x72,
 	0x43, 0x6f, 0x64, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x5f, 0x75, 0x72,
 	0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x68, 0x6f, 0x72, 0x74, 0x55, 0x72,
-	0x6c, 0x22, 0x2b, 0x0a, 0x0e, 0x41, 0x64, 0x64, 0x4a, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x6c, 0x22, 0x2b, 0x0a, 0x0e, 0x41, 0x64, 0x64, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x75, 0x72, 0x6c, 0x5f, 0x6a, 0x73, 0x6f, 0x6e, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x75, 0x72, 0x6c, 0x4a, 0x73, 0x6f, 0x6e, 0x22, 0x6c,
-	0x0a, 0x0f, 0x41, 0x64, 0x64, 0x4a, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x0a, 0x0f, 0x41, 0x64, 0x64, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x65, 0x72, 0x72, 0x6f, 0x72,
 	0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x65, 0x72, 0x72,
@@ -1181,9 +1181,9 @@ var file_app_proto_rawDesc = []byte{
 	0x28, 0x0a, 0x03, 0x41, 0x64, 0x64, 0x12, 0x0f, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x64, 0x64,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x10, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x64,
 	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x07, 0x41, 0x64, 0x64,
-	0x4a, 0x73, 0x6f, 0x6e, 0x12, 0x13, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x64, 0x64, 0x4a, 0x73,
-	0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x61, 0x70, 0x70, 0x2e,
-	0x41, 0x64, 0x64, 0x4a, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x4a, 0x53, 0x4f, 0x4e, 0x12, 0x13, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x64, 0x64, 0x4a, 0x53,
+	0x4f, 0x4e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x61, 0x70, 0x70, 0x2e,
+	0x41, 0x64, 0x64, 0x4a, 0x53, 0x4f, 0x4e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x37, 0x0a, 0x08, 0x41, 0x64, 0x64, 0x42, 0x61, 0x74, 0x63, 0x68, 0x12, 0x14, 0x2e, 0x61, 0x70,
 	0x70, 0x2e, 0x41, 0x64, 0x64, 0x42, 0x61, 0x74, 0x63, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x15, 0x2e, 0x61, 0x70, 0x70, 0x2e, 0x41, 0x64, 0x64, 0x42, 0x61, 0x74, 0x63, 0x68,
@@ -1224,8 +1224,8 @@ var file_app_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_app_proto_goTypes = []interface{}{
 	(*AddRequest)(nil),              // 0: app.AddRequest
 	(*AddResponse)(nil),             // 1: app.AddResponse
-	(*AddJsonRequest)(nil),          // 2: app.AddJsonRequest
-	(*AddJsonResponse)(nil),         // 3: app.AddJsonResponse
+	(*AddJSONRequest)(nil),          // 2: app.AddJSONRequest
+	(*AddJSONResponse)(nil),         // 3: app.AddJSONResponse
 	(*AddBatchRequest)(nil),         // 4: app.AddBatchRequest
 	(*AddBatchResponse)(nil),        // 5: app.AddBatchResponse
 	(*PingRequest)(nil),             // 6: app.PingRequest
@@ -1249,7 +1249,7 @@ var file_app_proto_depIdxs = []int32{
 	18, // 2: app.GetUserURLsResponse.urls:type_name -> app.GetUserURLsResponse.Url
 	19, // 3: app.DeleteURLsRequest.tokens:type_name -> app.DeleteURLsRequest.Token
 	0,  // 4: app.App.Add:input_type -> app.AddRequest
-	2,  // 5: app.App.AddJson:input_type -> app.AddJsonRequest
+	2,  // 5: app.App.AddJSON:input_type -> app.AddJSONRequest
 	4,  // 6: app.App.AddBatch:input_type -> app.AddBatchRequest
 	6,  // 7: app.App.Ping:input_type -> app.PingRequest
 	8,  // 8: app.App.Get:input_type -> app.GetRequest
@@ -1257,7 +1257,7 @@ var file_app_proto_depIdxs = []int32{
 	12, // 10: app.App.DeleteURLs:input_type -> app.DeleteURLsRequest
 	14, // 11: app.App.Stats:input_type -> app.StatsRequest
 	1,  // 12: app.App.Add:output_type -> app.AddResponse
-	3,  // 13: app.App.AddJson:output_type -> app.AddJsonResponse
+	3,  // 13: app.App.AddJSON:output_type -> app.AddJSONResponse
 	5,  // 14: app.App.AddBatch:output_type -> app.AddBatchResponse
 	7,  // 15: app.App.Ping:output_type -> app.PingResponse
 	9,  // 16: app.App.Get:output_type -> app.GetResponse
@@ -1302,7 +1302,7 @@ func file_app_proto_init() {
 			}
 		}
 		file_app_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddJsonRequest); i {
+			switch v := v.(*AddJSONRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1314,7 +1314,7 @@ func file_app_proto_init() {
 			}
 		}
 		file_app_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddJsonResponse); i {
+			switch v := v.(*AddJSONResponse); i {
 			case 0:
 				return &v.state
 			case 1:
