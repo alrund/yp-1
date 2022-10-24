@@ -946,6 +946,41 @@ func TestDbGetURLCount(t *testing.T) {
 	}
 }
 
+func TestDbGetURLCountFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT count(DISTINCT token) as num FROM url")).
+		WillReturnError(sql.ErrNoRows)
+
+	tests := []struct {
+		name string
+		want int
+	}{
+		{
+			"no rows",
+			0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetURLCount()
+
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, got)
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
 func TestDbGetUserIDCount(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -965,6 +1000,41 @@ func TestDbGetUserIDCount(t *testing.T) {
 		{
 			"success",
 			3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			storage := &DB{db: db}
+			got, err := storage.GetUserIDCount()
+
+			require.Nil(t, err)
+			assert.Equal(t, tt.want, got)
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestDbGetUserIDCountFail(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT count(DISTINCT user_id) as num FROM url")).
+		WillReturnError(sql.ErrNoRows)
+
+	tests := []struct {
+		name string
+		want int
+	}{
+		{
+			"no rows",
+			0,
 		},
 	}
 
