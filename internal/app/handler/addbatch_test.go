@@ -124,6 +124,7 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 				Storage:        storage.NewMap(),
 				TokenGenerator: testTokenGenerator,
 			}
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -133,7 +134,7 @@ func TestAddBatchJSONSuccess(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(AddBatchJSON(us))
+			h := http.HandlerFunc(hc.AddBatchJSON())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -267,6 +268,7 @@ func TestAddBatchJSONFail(t *testing.T) {
 				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -276,7 +278,7 @@ func TestAddBatchJSONFail(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(AddBatchJSON(us))
+			h := http.HandlerFunc(hc.AddBatchJSON())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -359,6 +361,7 @@ func TestAddBatchJSONConflict(t *testing.T) {
 				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -368,7 +371,7 @@ func TestAddBatchJSONConflict(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(AddBatchJSON(us))
+			h := http.HandlerFunc(hc.AddBatchJSON())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -386,7 +389,7 @@ func TestAddBatchJSONConflict(t *testing.T) {
 	}
 }
 
-func ExampleAddBatchJSON() {
+func ExampleCollection_AddBatchJSON() {
 	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/api/shorten/batch",

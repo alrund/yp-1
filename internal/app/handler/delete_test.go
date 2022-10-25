@@ -109,12 +109,12 @@ func TestDelete(t *testing.T) {
 				Value:  "yyy",
 				Expire: time.Now().Add(tkn.LifeTime),
 			})
-			us2 := &app.URLShortener{
+			us := &app.URLShortener{
 				Config:         testConfig,
 				Storage:        testStorage,
 				TokenGenerator: generator.NewSimple(),
 			}
-
+			hc := NewCollection(us)
 			request := httptest.NewRequest(tt.request.method, tt.request.target, strings.NewReader(tt.request.body))
 			request.Header.Set("Content-type", tt.request.contentType)
 			ctx := request.Context()
@@ -125,7 +125,7 @@ func TestDelete(t *testing.T) {
 			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(DeleteURLs(us2))
+			h := http.HandlerFunc(hc.DeleteURLs())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 			defer res.Body.Close()
@@ -152,7 +152,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func ExampleDeleteURLs() {
+func ExampleCollection_DeleteURLs() {
 	client := &http.Client{}
 	req, err := http.NewRequestWithContext(
 		context.Background(),

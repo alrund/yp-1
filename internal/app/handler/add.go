@@ -9,14 +9,7 @@ import (
 
 	"github.com/alrund/yp-1/internal/app/middleware"
 	"github.com/alrund/yp-1/internal/app/storage"
-	tkn "github.com/alrund/yp-1/internal/app/token"
 )
-
-type Adder interface {
-	GetBaseURL() string
-	Add(userID, url string) (*tkn.Token, error)
-	AddBatch(userID string, urls []string) (map[string]*tkn.Token, error)
-}
 
 type JSONRequest struct {
 	URL string `json:"url"`
@@ -27,7 +20,7 @@ type JSONResponse struct {
 }
 
 // Add adds a URL string to shorten.
-func Add(us Adder) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) Add() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		httpCode := http.StatusCreated
 
@@ -44,7 +37,7 @@ func Add(us Adder) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		token, err := us.Add(userID, string(b))
+		token, err := hc.us.Add(userID, string(b))
 		if err != nil {
 			if !errors.Is(err, storage.ErrURLAlreadyExists) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -55,7 +48,7 @@ func Add(us Adder) func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(httpCode)
-		_, err = w.Write([]byte(us.GetBaseURL() + token.Value))
+		_, err = w.Write([]byte(hc.us.GetBaseURL() + token.Value))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -65,7 +58,7 @@ func Add(us Adder) func(w http.ResponseWriter, r *http.Request) {
 }
 
 // AddJSON adds a URL string to shorten as a JSON object.
-func AddJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) AddJSON() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		httpCode := http.StatusCreated
 
@@ -94,7 +87,7 @@ func AddJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		token, err := us.Add(userID, jsonRequest.URL)
+		token, err := hc.us.Add(userID, jsonRequest.URL)
 		if err != nil {
 			if !errors.Is(err, storage.ErrURLAlreadyExists) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,7 +96,7 @@ func AddJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
 			httpCode = http.StatusConflict
 		}
 
-		jsonResponse := JSONResponse{Result: us.GetBaseURL() + token.Value}
+		jsonResponse := JSONResponse{Result: hc.us.GetBaseURL() + token.Value}
 		result, err := json.Marshal(jsonResponse)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -21,7 +21,7 @@ type JSONBatchResponseRow struct {
 }
 
 // AddBatchJSON adds multiple URLs at once for shortening.
-func AddBatchJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) AddBatchJSON() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		httpCode := http.StatusCreated
 
@@ -52,7 +52,7 @@ func AddBatchJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
 
 		jsonResponse := make([]JSONBatchResponseRow, 0)
 		URLs, URL2Row := getURL2Row(jsonRequests)
-		tokens, err := us.AddBatch(userID, URLs)
+		tokens, err := hc.us.AddBatch(userID, URLs)
 		if err != nil {
 			if !errors.Is(err, storage.ErrURLAlreadyExists) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -70,7 +70,7 @@ func AddBatchJSON(us Adder) func(w http.ResponseWriter, r *http.Request) {
 			correlationID := row.CorrelationID
 			jsonResponse = append(jsonResponse, JSONBatchResponseRow{
 				CorrelationID: correlationID,
-				ShortURL:      us.GetBaseURL() + token.Value,
+				ShortURL:      hc.us.GetBaseURL() + token.Value,
 			})
 		}
 

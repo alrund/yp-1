@@ -8,12 +8,8 @@ import (
 	"github.com/alrund/yp-1/internal/app/middleware"
 )
 
-type Remover interface {
-	RemoveTokens(tokenValues []string, userID string) error
-}
-
 // DeleteURLs deletes shortened URL tokens.
-func DeleteURLs(us Remover) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) DeleteURLs() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !hasContentType(r, "application/json") {
 			http.Error(w, "415 Unsupported Media Type.", http.StatusUnsupportedMediaType)
@@ -43,7 +39,7 @@ func DeleteURLs(us Remover) func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
 		go func() {
-			_ = us.RemoveTokens(tokens, userID)
+			_ = hc.us.RemoveTokens(tokens, userID)
 		}()
 	}
 	return fn

@@ -10,20 +10,15 @@ import (
 	"github.com/alrund/yp-1/internal/app/token"
 )
 
-type Getter interface {
-	Get(tokenValue string) (string, error)
-	GetUserURLs(userID string) ([]storage.URLpairs, error)
-}
-
 // Get returns a URL by token.
-func Get(us Getter) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) Get() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Path[1:]
 		if id == "" {
 			http.Error(w, "400 Bad Request.", http.StatusBadRequest)
 			return
 		}
-		url, err := us.Get(id)
+		url, err := hc.us.Get(id)
 		if err != nil {
 			if errors.Is(err, storage.ErrTokenNotFound) {
 				http.Error(w, "404 Not Found.", http.StatusNotFound)
@@ -56,7 +51,7 @@ func Get(us Getter) func(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserURLs returns a URL by user ID.
-func GetUserURLs(us Getter) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) GetUserURLs() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		contextUserID := r.Context().Value(middleware.UserIDContextKey)
 		userID, ok := contextUserID.(string)
@@ -65,7 +60,7 @@ func GetUserURLs(us Getter) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		urls, err := us.GetUserURLs(userID)
+		urls, err := hc.us.GetUserURLs(userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrTokenNotFound) {
 				http.Error(w, "204 No Content.", http.StatusNoContent)
