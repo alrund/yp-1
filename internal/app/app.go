@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"net"
 	"strings"
 
 	"github.com/alrund/yp-1/internal/app/config"
@@ -32,6 +33,7 @@ type URLShortener struct {
 	Config *config.Config
 	Storage
 	TokenGenerator tkn.Generator
+	TrustedSubnet  *net.IPNet
 }
 
 type Stat struct {
@@ -156,6 +158,7 @@ func (us *URLShortener) GetUserURLs(userID string) ([]storage.URLpairs, error) {
 	return URLPairs, nil
 }
 
+// GetStats returns statistic.
 func (us *URLShortener) GetStats() (*Stat, error) {
 	urlCount, err := us.GetURLCount()
 	if err != nil {

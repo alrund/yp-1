@@ -19,11 +19,14 @@ func (s *Server) Stats(ctx context.Context, in *pb.StatsRequest) (*pb.StatsRespo
 		return &response, nil
 	}
 
-	_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
-	if err != nil {
-		response.Code = http.StatusInternalServerError
-		response.Message = http.StatusText(http.StatusInternalServerError)
-		return &response, err
+	if s.us.TrustedSubnet == nil {
+		_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
+		if err != nil {
+			response.Code = http.StatusInternalServerError
+			response.Message = http.StatusText(http.StatusInternalServerError)
+			return &response, err
+		}
+		s.us.TrustedSubnet = ipnet
 	}
 
 	if in.XRealIP == "" {
@@ -34,7 +37,7 @@ func (s *Server) Stats(ctx context.Context, in *pb.StatsRequest) (*pb.StatsRespo
 
 	realIP := net.ParseIP(in.XRealIP)
 
-	if !ipnet.Contains(realIP) {
+	if !s.us.TrustedSubnet.Contains(realIP) {
 		response.Code = http.StatusForbidden
 		response.Message = http.StatusText(http.StatusForbidden)
 		return &response, nil
