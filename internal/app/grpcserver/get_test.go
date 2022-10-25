@@ -2,7 +2,6 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 	"testing"
 	"time"
 
@@ -13,9 +12,10 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	pb "github.com/alrund/yp-1/internal/proto"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 func TestGet(t *testing.T) {
@@ -59,64 +59,62 @@ func TestGet(t *testing.T) {
 	client := pb.NewAppClient(conn)
 
 	tests := []struct {
-		name    string
-		request *pb.GetRequest
-		want    *pb.GetResponse
+		name     string
+		request  *pb.GetRequest
+		want     *pb.GetResponse
+		wantCode codes.Code
 	}{
 		{
 			name:    "success",
 			request: &pb.GetRequest{Token: "qwerty"},
 			want: &pb.GetResponse{
-				Message: http.StatusText(http.StatusTemporaryRedirect),
-				Code:    http.StatusTemporaryRedirect,
-				Url:     "https://ya.ru",
+				Url: "https://ya.ru",
 			},
+			wantCode: codes.OK,
 		},
 		{
 			name:    "notfound",
 			request: &pb.GetRequest{Token: "notfound"},
 			want: &pb.GetResponse{
-				Message: http.StatusText(http.StatusNotFound),
-				Code:    http.StatusNotFound,
-				Url:     "",
+				Url: "",
 			},
+			wantCode: codes.NotFound,
 		},
 		{
 			name:    "expired",
 			request: &pb.GetRequest{Token: "expired"},
 			want: &pb.GetResponse{
-				Message: "498 Invalid Token.",
-				Code:    498,
-				Url:     "",
+				Url: "",
 			},
+			wantCode: codes.ResourceExhausted,
 		},
 		{
 			name:    "removed",
 			request: &pb.GetRequest{Token: "removed"},
 			want: &pb.GetResponse{
-				Message: http.StatusText(http.StatusGone),
-				Code:    http.StatusGone,
-				Url:     "",
+				Url: "",
 			},
+			wantCode: codes.NotFound,
 		},
 		{
 			name:    "badrequest",
 			request: &pb.GetRequest{Token: ""},
 			want: &pb.GetResponse{
-				Message: http.StatusText(http.StatusBadRequest),
-				Code:    http.StatusBadRequest,
-				Url:     "",
+				Url: "",
 			},
+			wantCode: codes.InvalidArgument,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := client.Get(context.Background(), tt.request)
-			require.Nil(t, err)
-
-			assert.Equal(t, tt.want.Message, resp.Message)
-			assert.Equal(t, tt.want.Code, resp.Code)
-			assert.Equal(t, tt.want.Url, resp.Url)
+			if err != nil {
+				if e, ok := status.FromError(err); ok {
+					assert.Equal(t, tt.wantCode, e.Code())
+				}
+			} else {
+				assert.Equal(t, tt.want.Url, resp.Url)
+			}
 		})
 	}
 }
@@ -159,9 +157,10 @@ func TestGetUserURLs(t *testing.T) {
 		request *pb.GetUserURLsRequest
 	}
 	tests := []struct {
-		name    string
-		request request
-		want    *pb.GetUserURLsResponse
+		name     string
+		request  request
+		want     *pb.GetUserURLsResponse
+		wantCode codes.Code
 	}{
 		{
 			name: "success",
@@ -170,8 +169,6 @@ func TestGetUserURLs(t *testing.T) {
 				request: &pb.GetUserURLsRequest{},
 			},
 			want: &pb.GetUserURLsResponse{
-				Message: http.StatusText(http.StatusOK),
-				Code:    http.StatusOK,
 				Urls: []*pb.GetUserURLsResponse_Url{
 					{
 						OriginalUrl: "https://ya.ru",
@@ -179,6 +176,7 @@ func TestGetUserURLs(t *testing.T) {
 					},
 				},
 			},
+			wantCode: codes.OK,
 		},
 		{
 			name: "notfound",
@@ -187,20 +185,21 @@ func TestGetUserURLs(t *testing.T) {
 				request: &pb.GetUserURLsRequest{},
 			},
 			want: &pb.GetUserURLsResponse{
-				Message: http.StatusText(http.StatusNoContent),
-				Code:    http.StatusNoContent,
-				Urls:    []*pb.GetUserURLsResponse_Url(nil),
+				Urls: []*pb.GetUserURLsResponse_Url(nil),
 			},
+			wantCode: codes.NotFound,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp, err := client.GetUserURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
-			require.Nil(t, err)
-
-			assert.Equal(t, tt.want.Message, resp.Message)
-			assert.Equal(t, tt.want.Code, resp.Code)
-			assert.Equal(t, tt.want.Urls, resp.Urls)
+			if err != nil {
+				if e, ok := status.FromError(err); ok {
+					assert.Equal(t, tt.wantCode, e.Code())
+				}
+			} else {
+				assert.Equal(t, tt.want.Urls, resp.Urls)
+			}
 		})
 	}
 }

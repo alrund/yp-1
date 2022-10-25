@@ -9,19 +9,7 @@ message AddRequest {
 }
 
 message AddResponse {
-  string message = 1;
-  int32 code = 2;
-  string short_url = 3;
-}
-
-message AddJSONRequest {
-  string url_json = 1;
-}
-
-message AddJSONResponse {
-  string message = 1;
-  int32 code = 2;
-  string short_url_json = 3;
+  string short_url = 1;
 }
 
 message AddBatchRequest {
@@ -33,42 +21,33 @@ message AddBatchRequest {
 }
 
 message AddBatchResponse {
-  string message = 1;
-  int32 code = 2;
   message Url {
     string correlation_id = 1;
     string short_url = 2;
   }
-  repeated Url short_urls = 3;
+  repeated Url short_urls = 1;
 }
 
 message PingRequest {}
 
-message PingResponse {
-  string message = 1;
-  int32 code = 2;
-}
+message PingResponse {}
 
 message GetRequest {
   string token = 1;
 }
 
 message GetResponse {
-  string message = 1;
-  int32 code = 2;
-  string url = 3;
+  string url = 1;
 }
 
 message GetUserURLsRequest {}
 
 message GetUserURLsResponse {
-  string message = 1;
-  int32 code = 2;
   message Url {
     string original_url = 1;
     string short_url = 2;
   }
-  repeated Url urls = 3;
+  repeated Url urls = 1;
 }
 
 message DeleteURLsRequest {
@@ -78,25 +57,19 @@ message DeleteURLsRequest {
   repeated Token tokens = 1;
 }
 
-message DeleteURLsResponse {
-  string message = 1;
-  int32 code = 2;
-}
+message DeleteURLsResponse {}
 
 message StatsRequest {
   string XRealIP = 1;
 }
 
 message StatsResponse {
-  string message = 1;
-  int32 code = 2;
-  int32 urls = 3;
-  int32 users = 4;
+  int32 urls = 1;
+  int32 users = 2;
 }
 
 service App {
   rpc Add(AddRequest) returns (AddResponse);
-  rpc AddJSON(AddJSONRequest) returns (AddJSONResponse);
   rpc AddBatch(AddBatchRequest) returns (AddBatchResponse);
   rpc Ping(PingRequest) returns (PingResponse);
   rpc Get(GetRequest) returns (GetResponse);

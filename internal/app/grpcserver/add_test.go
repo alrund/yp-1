@@ -2,7 +2,6 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 	"testing"
 	"time"
 
@@ -68,8 +67,6 @@ func TestAdd(t *testing.T) {
 				request: &pb.AddRequest{Url: "http://ya.ru"},
 			},
 			want: &pb.AddResponse{
-				Message:  "",
-				Code:     http.StatusCreated,
 				ShortUrl: testConfig.BaseURL + testToken,
 			},
 		},
@@ -80,8 +77,6 @@ func TestAdd(t *testing.T) {
 				request: &pb.AddRequest{Url: "existsurl"},
 			},
 			want: &pb.AddResponse{
-				Message:  "",
-				Code:     http.StatusConflict,
 				ShortUrl: testConfig.BaseURL + testToken,
 			},
 		},
@@ -91,8 +86,6 @@ func TestAdd(t *testing.T) {
 			resp, err := client.Add(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
 
-			assert.Equal(t, tt.want.Message, resp.Message)
-			assert.Equal(t, tt.want.Code, resp.Code)
 			assert.Equal(t, tt.want.ShortUrl, resp.ShortUrl)
 		})
 	}

@@ -2,7 +2,6 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 	"testing"
 	"time"
 
@@ -12,9 +11,10 @@ import (
 	tkn "github.com/alrund/yp-1/internal/app/token"
 	pb "github.com/alrund/yp-1/internal/proto"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 )
 
 func TestStats(t *testing.T) {
@@ -32,10 +32,11 @@ func TestStats(t *testing.T) {
 	testTokenGenerator := new(TestGenerator)
 
 	tests := []struct {
-		name    string
-		config  *config.Config
-		request *pb.StatsRequest
-		want    *pb.StatsResponse
+		name     string
+		config   *config.Config
+		request  *pb.StatsRequest
+		want     *pb.StatsResponse
+		wantCode codes.Code
 	}{
 		{
 			name: "success",
@@ -46,11 +47,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.192.1"},
 			want: &pb.StatsResponse{
-				Message: http.StatusText(http.StatusOK),
-				Code:    http.StatusOK,
-				Users:   1,
-				Urls:    2,
+				Users: 1,
+				Urls:  2,
 			},
+			wantCode: codes.OK,
 		},
 		{
 			name: "fail - empty TrustedSubnet",
@@ -61,11 +61,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.192.1"},
 			want: &pb.StatsResponse{
-				Message: http.StatusText(http.StatusForbidden),
-				Code:    http.StatusForbidden,
-				Users:   0,
-				Urls:    0,
+				Users: 0,
+				Urls:  0,
 			},
+			wantCode: codes.PermissionDenied,
 		},
 		{
 			name: "fail - empty real ip",
@@ -76,11 +75,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: ""},
 			want: &pb.StatsResponse{
-				Message: http.StatusText(http.StatusForbidden),
-				Code:    http.StatusForbidden,
-				Users:   0,
-				Urls:    0,
+				Users: 0,
+				Urls:  0,
 			},
+			wantCode: codes.PermissionDenied,
 		},
 		{
 			name: "fail - not in TrustedSubnet",
@@ -91,11 +89,10 @@ func TestStats(t *testing.T) {
 			},
 			request: &pb.StatsRequest{XRealIP: "216.58.100.1"},
 			want: &pb.StatsResponse{
-				Message: http.StatusText(http.StatusForbidden),
-				Code:    http.StatusForbidden,
-				Users:   0,
-				Urls:    0,
+				Users: 0,
+				Urls:  0,
 			},
+			wantCode: codes.PermissionDenied,
 		},
 	}
 	for _, tt := range tests {
@@ -119,12 +116,14 @@ func TestStats(t *testing.T) {
 			client := pb.NewAppClient(conn)
 
 			resp, err := client.Stats(context.Background(), tt.request)
-			require.Nil(t, err)
-
-			assert.Equal(t, tt.want.Message, resp.Message)
-			assert.Equal(t, tt.want.Code, resp.Code)
-			assert.Equal(t, tt.want.Users, resp.Users)
-			assert.Equal(t, tt.want.Urls, resp.Urls)
+			if err != nil {
+				if e, ok := status.FromError(err); ok {
+					assert.Equal(t, tt.wantCode, e.Code())
+				}
+			} else {
+				assert.Equal(t, tt.want.Users, resp.Users)
+				assert.Equal(t, tt.want.Urls, resp.Urls)
+			}
 		})
 	}
 }

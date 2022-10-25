@@ -2,7 +2,6 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 	"testing"
 	"time"
 
@@ -48,11 +47,8 @@ func TestDeleteURLs(t *testing.T) {
 				request: &pb.DeleteURLsRequest{Tokens: []*pb.DeleteURLsRequest_Token{{Value: "xxx"}}},
 			},
 			want: want{
-				response: &pb.DeleteURLsResponse{
-					Message: http.StatusText(http.StatusAccepted),
-					Code:    http.StatusAccepted,
-				},
-				num: 1,
+				response: &pb.DeleteURLsResponse{},
+				num:      1,
 			},
 		},
 		{
@@ -62,11 +58,8 @@ func TestDeleteURLs(t *testing.T) {
 				request: &pb.DeleteURLsRequest{Tokens: []*pb.DeleteURLsRequest_Token{{Value: "xxx"}, {Value: "yyy"}}},
 			},
 			want: want{
-				response: &pb.DeleteURLsResponse{
-					Message: http.StatusText(http.StatusAccepted),
-					Code:    http.StatusAccepted,
-				},
-				num: 0,
+				response: &pb.DeleteURLsResponse{},
+				num:      0,
 			},
 		},
 	}
@@ -100,11 +93,8 @@ func TestDeleteURLs(t *testing.T) {
 			defer conn.Close()
 			client := pb.NewAppClient(conn)
 
-			resp, err := client.DeleteURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
+			_, err = client.DeleteURLs(getContextWithUserID(tt.request.userID, testEncryptor), tt.request.request)
 			require.Nil(t, err)
-
-			assert.Equal(t, tt.want.response.Message, resp.Message)
-			assert.Equal(t, tt.want.response.Code, resp.Code)
 
 			if tt.want.num == 0 {
 				return
