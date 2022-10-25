@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
-	"os"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -38,8 +37,8 @@ var (
 func main() {
 	printBuildInfo()
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	defer stop()
 
 	cfg := config.GetConfig()
 
@@ -49,25 +48,19 @@ func main() {
 		TokenGenerator: generator.NewSimple(),
 	}
 
-	closeBothCh := make(chan struct{})
-	go func() {
-		<-sigCh
-		close(closeBothCh)
-	}()
-
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		if err := run(us, closeBothCh); err != nil {
+		if err := run(ctx, us); err != nil {
 			log.Fatalf("HTTP server ListenAndServe: %v", err)
 		}
 	}()
 
 	go func() {
 		defer wg.Done()
-		if err := runGRPC(us, closeBothCh); err != nil {
+		if err := runGRPC(ctx, us); err != nil {
 			log.Fatalf("GRPC server ListenAndServe: %v", err)
 		}
 	}()
@@ -81,7 +74,7 @@ func printBuildInfo() {
 	fmt.Printf("Build commit: %s\n", buildCommit)
 }
 
-func run(us *app.URLShortener, closeBothCh chan struct{}) error {
+func run(ctx context.Context, us *app.URLShortener) error {
 	httpShutdownCh := make(chan struct{})
 
 	cfg := us.Config
@@ -93,7 +86,7 @@ func run(us *app.URLShortener, closeBothCh chan struct{}) error {
 	}
 
 	go func() {
-		<-closeBothCh
+		<-ctx.Done()
 
 		if err := server.Shutdown(context.Background()); err != nil {
 			log.Printf("HTTP server Shutdown: %v", err)
@@ -121,7 +114,7 @@ func run(us *app.URLShortener, closeBothCh chan struct{}) error {
 	return nil
 }
 
-func runGRPC(us *app.URLShortener, closeBothCh chan struct{}) error {
+func runGRPC(ctx context.Context, us *app.URLShortener) error {
 	var (
 		err        error
 		serverGRPC *grpc.Server
@@ -145,7 +138,7 @@ func runGRPC(us *app.URLShortener, closeBothCh chan struct{}) error {
 	grpcShutdownCh := make(chan struct{})
 
 	go func() {
-		<-closeBothCh
+		<-ctx.Done()
 
 		serverGRPC.GracefulStop()
 
