@@ -2,14 +2,12 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
 	"github.com/alrund/yp-1/internal/app"
 	"github.com/alrund/yp-1/internal/app/config"
 	"github.com/alrund/yp-1/internal/app/storage"
 	pb "github.com/alrund/yp-1/internal/proto"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -48,19 +46,13 @@ func TestPing(t *testing.T) {
 		{
 			name:    "success",
 			request: &pb.PingRequest{},
-			want: &pb.PingResponse{
-				Message: http.StatusText(http.StatusOK),
-				Code:    http.StatusOK,
-			},
+			want:    &pb.PingResponse{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp, err := client.Ping(context.Background(), tt.request)
+			_, err := client.Ping(context.Background(), tt.request)
 			require.Nil(t, err)
-
-			assert.Equal(t, tt.want.Message, resp.Message)
-			assert.Equal(t, tt.want.Code, resp.Code)
 		})
 	}
 }

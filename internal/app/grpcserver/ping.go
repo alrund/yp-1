@@ -2,9 +2,10 @@ package grpcserver
 
 import (
 	"context"
-	"net/http"
 
 	pb "github.com/alrund/yp-1/internal/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Ping checks the database connection.
@@ -12,12 +13,8 @@ func (s *Server) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingResponse
 	var response pb.PingResponse
 
 	if err := s.us.Ping(ctx); err != nil {
-		response.Code = http.StatusInternalServerError
-		response.Message = http.StatusText(http.StatusInternalServerError)
-		return &response, err
+		return &response, status.Error(codes.Internal, codes.Internal.String())
 	}
 
-	response.Code = http.StatusOK
-	response.Message = http.StatusText(http.StatusOK)
 	return &response, nil
 }
