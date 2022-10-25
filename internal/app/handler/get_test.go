@@ -16,15 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var usGet = &app.URLShortener{
-	Config: &config.Config{
-		ServerAddress: "localhost:8080",
-		BaseURL:       "http://localhost:8080/",
-	},
-	Storage:        new(TestStorage),
-	TokenGenerator: generator.NewSimple(),
-}
-
 func TestGet(t *testing.T) {
 	type want struct {
 		code        int
@@ -109,12 +100,22 @@ func TestGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config: &config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080/",
+				},
+				Storage:        new(TestStorage),
+				TokenGenerator: generator.NewSimple(),
+			}
+
+			hc := NewCollection(us)
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			ctx := request.Context()
 			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(Get(usGet))
+			h := http.HandlerFunc(hc.Get())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -192,6 +193,16 @@ func TestGetUserURLs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config: &config.Config{
+					ServerAddress: "localhost:8080",
+					BaseURL:       "http://localhost:8080/",
+				},
+				Storage:        new(TestStorage),
+				TokenGenerator: generator.NewSimple(),
+			}
+
+			hc := NewCollection(us)
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			ctx := request.Context()
 			if tt.request.errTypeUserID != 0 {
@@ -201,7 +212,7 @@ func TestGetUserURLs(t *testing.T) {
 			}
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(GetUserURLs(usGet))
+			h := http.HandlerFunc(hc.GetUserURLs())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -221,7 +232,7 @@ func TestGetUserURLs(t *testing.T) {
 	}
 }
 
-func ExampleGet() {
+func ExampleCollection_Get() {
 	//nolint
 	r, err := http.Get("http://localhost:8080/oTHlXx")
 	if err != nil {
@@ -234,7 +245,7 @@ func ExampleGet() {
 	// 200
 }
 
-func ExampleGetUserURLs() {
+func ExampleCollection_GetUserURLs() {
 	//nolint
 	r, err := http.Get("http://localhost:8080/api/user/urls")
 	if err != nil {

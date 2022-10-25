@@ -195,14 +195,15 @@ func getStorage(cfg *config.Config) app.Storage {
 func getRouter(us *app.URLShortener, cfg *config.Config) *mux.Router {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", handler.Add(us)).Methods(http.MethodPost)
-	r.HandleFunc("/api/shorten", handler.AddJSON(us)).Methods(http.MethodPost)
-	r.HandleFunc("/api/shorten/batch", handler.AddBatchJSON(us)).Methods(http.MethodPost)
-	r.HandleFunc("/ping", handler.Ping(us)).Methods(http.MethodGet)
-	r.HandleFunc("/{id}", handler.Get(us)).Methods(http.MethodGet)
-	r.HandleFunc("/api/user/urls", handler.GetUserURLs(us)).Methods(http.MethodGet)
-	r.HandleFunc("/api/user/urls", handler.DeleteURLs(us)).Methods(http.MethodDelete)
-	r.HandleFunc("/api/internal/stats", handler.Stats(us)).Methods(http.MethodGet)
+	hc := handler.NewCollection(us)
+	r.HandleFunc("/", hc.Add()).Methods(http.MethodPost)
+	r.HandleFunc("/api/shorten", hc.AddJSON()).Methods(http.MethodPost)
+	r.HandleFunc("/api/shorten/batch", hc.AddBatchJSON()).Methods(http.MethodPost)
+	r.HandleFunc("/ping", hc.Ping()).Methods(http.MethodGet)
+	r.HandleFunc("/{id}", hc.Get()).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/urls", hc.GetUserURLs()).Methods(http.MethodGet)
+	r.HandleFunc("/api/user/urls", hc.DeleteURLs()).Methods(http.MethodDelete)
+	r.HandleFunc("/api/internal/stats", hc.Stats()).Methods(http.MethodGet)
 
 	subRouter := r.PathPrefix("/debug/pprof").Subrouter()
 	subRouter.HandleFunc("/", pprof.Index)

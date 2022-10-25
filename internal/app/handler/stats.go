@@ -4,20 +4,12 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-
-	"github.com/alrund/yp-1/internal/app"
-	"github.com/alrund/yp-1/internal/app/config"
 )
 
-type Counter interface {
-	GetConfig() *config.Config
-	GetStats() (*app.Stat, error)
-}
-
 // Stats get statistic information.
-func Stats(us Counter) func(w http.ResponseWriter, r *http.Request) {
+func (hc *Collection) Stats() func(w http.ResponseWriter, r *http.Request) {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		cfg := us.GetConfig()
+		cfg := hc.us.GetConfig()
 		if cfg.TrustedSubnet == "" {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
@@ -42,7 +34,7 @@ func Stats(us Counter) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		stat, err := us.GetStats()
+		stat, err := hc.us.GetStats()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

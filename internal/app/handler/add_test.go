@@ -106,7 +106,7 @@ func TestAdd(t *testing.T) {
 				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
-
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -115,7 +115,7 @@ func TestAdd(t *testing.T) {
 				strings.NewReader(tt.request.body),
 			)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(Add(us))
+			h := http.HandlerFunc(hc.Add())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -203,6 +203,7 @@ func TestAddJSON(t *testing.T) {
 				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -212,7 +213,7 @@ func TestAddJSON(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(AddJSON(us))
+			h := http.HandlerFunc(hc.AddJSON())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -331,6 +332,7 @@ func TestAddJSONFail(t *testing.T) {
 				Storage:        preparedStorage,
 				TokenGenerator: testTokenGenerator,
 			}
+			hc := NewCollection(us)
 			request := getNewRequestWithUserID(
 				tt.request.method,
 				tt.request.target,
@@ -340,7 +342,7 @@ func TestAddJSONFail(t *testing.T) {
 			)
 			request.Header.Set("Content-type", tt.request.contentType)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(AddJSON(us))
+			h := http.HandlerFunc(hc.AddJSON())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
@@ -358,7 +360,7 @@ func TestAddJSONFail(t *testing.T) {
 	}
 }
 
-func ExampleAdd() {
+func ExampleCollection_Add() {
 	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/",
@@ -381,7 +383,7 @@ func ExampleAdd() {
 	// "http://localhost:8080/oTHlXx"
 }
 
-func ExampleAddJSON() {
+func ExampleCollection_AddJSON() {
 	//nolint
 	r, err := http.Post(
 		"http://localhost:8080/api/shorten",

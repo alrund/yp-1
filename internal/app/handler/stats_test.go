@@ -112,20 +112,19 @@ func TestStats(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			us := &app.URLShortener{
+				Config:         tt.config,
+				Storage:        new(TestStorage),
+				TokenGenerator: generator.NewSimple(),
+			}
+			hc := NewCollection(us)
 			request := httptest.NewRequest(tt.request.method, tt.request.target, nil)
 			request.Header.Add("X-Real-IP", tt.request.XRealIP)
 			ctx := request.Context()
 			ctx = context.WithValue(ctx, middleware.UserIDContextKey, tt.request.userID)
 			request = request.WithContext(ctx)
 			w := httptest.NewRecorder()
-
-			usStats := &app.URLShortener{
-				Config:         tt.config,
-				Storage:        new(TestStorage),
-				TokenGenerator: generator.NewSimple(),
-			}
-
-			h := http.HandlerFunc(Stats(usStats))
+			h := http.HandlerFunc(hc.Stats())
 			h.ServeHTTP(w, request)
 			res := w.Result()
 
