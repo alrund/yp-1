@@ -15,10 +15,13 @@ func (hc *Collection) Stats() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if hc.us.TrustedSubnet == nil {
+			_, ipnet, err := net.ParseCIDR(cfg.TrustedSubnet)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			hc.us.TrustedSubnet = ipnet
 		}
 
 		realIPHeader := r.Header.Get("X-Real-IP")
@@ -29,7 +32,7 @@ func (hc *Collection) Stats() func(w http.ResponseWriter, r *http.Request) {
 
 		realIP := net.ParseIP(realIPHeader)
 
-		if !ipnet.Contains(realIP) {
+		if !hc.us.TrustedSubnet.Contains(realIP) {
 			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 			return
 		}
